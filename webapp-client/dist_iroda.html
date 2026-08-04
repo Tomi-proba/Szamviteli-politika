@@ -659,6 +659,22 @@ function hasColor(r) {
   return Array.from(rPr.children).some(el => el.localName === 'color');
 }
 
+function markSubstituted(r, xmlDoc) {
+  // A sablon eredeti "kitöltendő hely" jelölését (sárga kiemelés, áthúzás,
+  // piros betűszín) alkalmazza egy behelyettesített válaszra - a
+  // felülvizsgáló munkatárs ebből lássa, mi került be automatikusan.
+  clearRunMarks(r);
+  const rPr = ensureRPr(r, xmlDoc);
+  const highlight = xmlDoc.createElementNS(W_NS, 'w:highlight');
+  highlight.setAttributeNS(W_NS, 'w:val', 'yellow');
+  rPr.appendChild(highlight);
+  const strike = xmlDoc.createElementNS(W_NS, 'w:strike');
+  rPr.appendChild(strike);
+  const color = xmlDoc.createElementNS(W_NS, 'w:color');
+  color.setAttributeNS(W_NS, 'w:val', 'C00000');
+  rPr.appendChild(color);
+}
+
 function clearRunMarks(r) {
   const rPr = getRPr(r);
   if (!rPr) return;
@@ -697,20 +713,26 @@ function stripBracketRef(p, xmlDoc) {
   }
 }
 
-function clearChoiceMarks(p) {
-  for (const r of getRuns(p)) clearRunMarks(r);
+function clearChoiceMarks(p, exceptRuns) {
+  const skip = exceptRuns || new Set();
+  getRuns(p).forEach((r, i) => {
+    if (!skip.has(i)) clearRunMarks(r);
+  });
 }
 
 function fillBlanks(p, values, xmlDoc) {
   const runs = getRuns(p);
   const groups = blankGroups(p);
+  const markedIndices = new Set();
   groups.forEach((grp, gi) => {
     const val = values[gi];
     setRunText(runs[grp[0]], val == null ? '' : val, xmlDoc);
+    markSubstituted(runs[grp[0]], xmlDoc);
+    markedIndices.add(grp[0]);
     for (let k = 1; k < grp.length; k++) setRunText(runs[grp[k]], '', xmlDoc);
   });
   stripBracketRef(p, xmlDoc);
-  clearChoiceMarks(p);
+  clearChoiceMarks(p, markedIndices);
 }
 
 function keepP(p, xmlDoc) {

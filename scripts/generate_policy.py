@@ -10,8 +10,11 @@ legenerál egy tisztított Word-vázlatot:
     törli a többit,
   - eltávolítja a [Szv N. kérdés] / [Ért N. kérdés] hivatkozásokat és a
     JELÖLT munkapéldány szerkesztői útmutatóját,
-  - a fentiek szerint kezelt bekezdéseknél megszünteti a "még döntendő"
-    kék/sárga/áthúzott jelölést, hogy jól látható legyen, mi már kész.
+  - minden behelyettesített választ a sablon eredeti "kitöltendő hely"
+    jelölésével (sárga kiemelés, áthúzás, piros betűszín) hagy, hogy a
+    felülvizsgáló kolléga elsőre lássa, mi került be automatikusan; a
+    bekezdés egyéb (nem behelyettesített) részein megszünteti a kék
+    "még döntendő" betűszínt.
 
 FONTOS: ez egy VÁZLATOT készít. A sablon számos, a kérdőívben NEM szereplő
 döntési pontot (VAGY-alternatívát) is tartalmaz (pl. eszközértékelési
@@ -27,6 +30,8 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import docx
+from docx.enum.text import WD_COLOR_INDEX
+from docx.shared import RGBColor
 
 BASE = Path(__file__).resolve().parent.parent
 TEMPLATE = BASE / "sablon" / "merged.docx"
@@ -65,26 +70,46 @@ def strip_bracket_ref(paragraph):
             r.text = ""
 
 
-def clear_choice_marks(paragraph):
+def clear_choice_marks(paragraph, except_runs=()):
     """A 'még döntendő' jelöléseket (sárga kiemelés, áthúzás, kék/piros
-    betűszín) törli egy már véglegesített bekezdésben."""
-    for r in paragraph.runs:
+    betűszín) törli egy már véglegesített bekezdésben - a except_runs-ban
+    megadott run-indexeket kihagyja (pl. amiket épp most jelöltünk meg
+    behelyettesítettként)."""
+    for i, r in enumerate(paragraph.runs):
+        if i in except_runs:
+            continue
         r.font.highlight_color = None
-        r.font.strike = False
+        r.font.strike = None
         if r.font.color is not None and r.font.color.type is not None:
             r.font.color.rgb = None
 
 
+def mark_substituted(run):
+    """A sablon eredeti 'kitöltendő hely' jelölését (sárga kiemelés,
+    áthúzás, piros betűszín) alkalmazza egy behelyettesített válaszra, hogy
+    a felülvizsgáló munkatárs elsőre lássa, mely szövegrészek automatikusan
+    kerültek be, és melyeket kell ellenőriznie."""
+    run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+    run.font.strike = True
+    run.font.color.rgb = RGBColor(0xC0, 0x00, 0x00)
+
+
 def fill_blanks(paragraph, values):
     """Sorrendben kitölti a bekezdés kitöltendő helyeit a megadott
-    értékekkel, majd normalizálja a formázást."""
+    értékekkel; a behelyettesített szöveget a sablon eredeti "kitöltendő"
+    jelölésével (sárga kiemelés, áthúzás, piros betű) hagyja, a bekezdés
+    egyéb részein pedig megszünteti a "még döntendő" jelölést."""
     groups = blank_groups(paragraph)
+    marked_indices = set()
     for grp, val in zip(groups, values):
-        paragraph.runs[grp[0]].text = "" if val is None else str(val)
+        first = paragraph.runs[grp[0]]
+        first.text = "" if val is None else str(val)
+        mark_substituted(first)
+        marked_indices.add(grp[0])
         for j in grp[1:]:
             paragraph.runs[j].text = ""
     strip_bracket_ref(paragraph)
-    clear_choice_marks(paragraph)
+    clear_choice_marks(paragraph, except_runs=marked_indices)
 
 
 def keep(paragraph):

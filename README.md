@@ -99,9 +99,13 @@ A script:
    **törli a többit** (a "VAGY" elválasztókkal együtt).
 3. Eltávolítja a `[Szv N. kérdés]` / `[Ért N. kérdés]` hivatkozásokat és a
    JELÖLT munkapéldány szerkesztői útmutatóját (az elejéről).
-4. A már **kész** (kitöltött vagy eldöntött) bekezdéseknél megszünteti a
-   sárga kiemelést / áthúzást / kék "még döntendő" betűszínt, hogy a
-   kollégák első pillantásra lássák: ez már megvan.
+4. A **behelyettesített válaszszöveget** a sablon eredeti "kitöltendő hely"
+   jelölésével (sárga kiemelés, áthúzás, piros betűszín) hagyja - ez jelzi a
+   felülvizsgáló kollégának, mely szövegrészek kerültek be automatikusan, és
+   melyeket kell átnéznie kiküldés előtt. A bekezdés egyéb részein (a
+   VAGY-alternatívák közül kiválasztott, változatlanul hagyott szövegen)
+   megszünteti a kék "még döntendő" betűszínt, hogy csak a tényleges
+   behelyettesítés maradjon kiemelve.
 5. Ahol a válasz nem egyértelmű (pl. "nincs cégérték" vagy "nem aktiválunk",
    miközben a sablon egy leírási időt kérne), **nem tippel** - egy jól
    látható, félkövér piros "⚠ ELLENŐRIZENDŐ" jelölést szúr be a bekezdés elé,
