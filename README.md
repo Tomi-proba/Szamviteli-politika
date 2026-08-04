@@ -4,23 +4,39 @@ Ez a projekt a "JELÖLT" számviteli politika sablon és az ügyfél-kérdőív
 alapján **automatikusan legenerál egy Word-vázlatot**, amit a kollégák
 átnéznek/pontosítanak, mielőtt kiküldik az ügyfélnek.
 
-## Kipróbálás - webes űrlap (ez a tényleges "rendszer")
+## Kipróbálás - két féle "rendszer" közül lehet választani
 
-Nincs telepítés, nincs külső függőség - csak Python 3 kell hozzá:
+**A) Böngészőben futó, publikált oldal (nincs telepítés, csak egy link)**
+A `webapp-client/` mappa egy teljesen önálló, kliens-oldali (böngészőben
+futó) változat - nincs szükség Python-ra a felhasználó gépén, mert a teljes
+motor (ZIP-írás/olvasás, docx-szerkesztés) JavaScriptben újraírva fut. Ebből
+építhető egy publikálható, egyetlen HTML-fájlból álló oldal:
+
+```bash
+python3 webapp-client/build.py   # -> webapp-client/dist.html
+```
+
+A `dist.html` egy statikus, önálló fájl (a sablon és a kérdőív be van égetve
+base64-ként) - egy erre alkalmas felületen (pl. Claude Artifact) közzétéve
+egy sima linkként megnyitható, kattintható eszközzé válik: kitöltés ->
+"Vázlat legenerálása" -> letöltés, mind a böngészőben, szerver nélkül.
+
+**B) Helyi Python-os webform (ha van, aki tud terminált használni)**
 
 ```bash
 python3 scripts/webapp.py
 ```
 
-Ezután a böngészőben: **http://localhost:8000** - egy űrlap jelenik meg a
-kérdésekkel (kék háttér = ügyféltől kérdezendő, sárga = iroda tölti ki).
-Kitöltés után a "Vázlat legenerálása" gomb egyből **letölti a kész Word-
-vázlatot**. Ez a `data/questions.json`-t és a `scripts/generate_policy.py`
-motort futtatja a háttérben - nincs szükség JSON-fájl kézi szerkesztésére
-vagy parancssori használatra.
-
+Ezután a böngészőben: **http://localhost:8000** - ugyanaz a kérdőív, csak
+Python-szerveren keresztül futtatva (`scripts/generate_policy.py`).
 (A `python3 scripts/webapp.py 8123` formával más portot is megadhatsz, ha
 a 8000-es foglalt.)
+
+**A/B eltérés:** mindkettő A/UGYANAZT a motorlogikát futtatja (a Python és a
+JS változat tesztekkel ellenőrzötten pontosan azonos kimenetet ad ugyanazon
+válaszokra) - csak a futtatás módja más. Ha a sablon szövege változik, MINDKÉT
+oldali (Python + JS) `resolve_*` logikát frissíteni kell, mert a bekezdés-
+indexek mindkettőben hard-code-olva vannak.
 
 ## Hogyan működik belül
 
@@ -29,8 +45,13 @@ data/questions.json          <- a kérdőív definíciója (mit kérdezünk az �
 data/answers.example.json    <- egy kitöltött minta-válaszkészlet (teszteléshez)
 sablon/szamviteli_politika_JELOLT.docx   <- az eredeti, feltöltött sablon
 sablon/merged.docx           <- a sablon "megtisztított" (összevont futású) másolata - ezt olvassa a script
-scripts/generate_policy.py   <- a fő motor: válaszok + sablon -> kitöltött Word-vázlat
-scripts/webapp.py            <- helyi webes űrlap a motor fölé (ezt érdemes használni)
+scripts/generate_policy.py   <- a fő motor (Python): válaszok + sablon -> kitöltött Word-vázlat
+scripts/webapp.py            <- helyi Python webform a motor fölé
+webapp-client/zip.js         <- minimál ZIP olvasó/író böngészőben (CompressionStream alapú)
+webapp-client/docx.js        <- docx bekezdés/futás-szintű segédfüggvények böngészőben
+webapp-client/resolve.js     <- a generate_policy.py resolve_* függvényeinek JS portja
+webapp-client/page_source.html <- az oldal HTML/CSS/JS sablonja (build.py egészíti ki adattal)
+webapp-client/build.py       <- összeállítja a publikálható dist.html-t
 output/                      <- ide kerülnek a legenerált vázlatok
 ```
 

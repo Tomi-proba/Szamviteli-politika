@@ -392,7 +392,11 @@ def resolve_simple_fills(p, a):
     delete(p[1060])
 
     fill_blanks(p[1015], [a.get("bizonylatkezeles_szabalyai", "")])
-    fill_blanks(p[1153], [a.get("evkozi_zarasok_feladatai", "")])
+    # 1153-nak KÉT kitöltendő helye van: egy listafolytatás ("...archiválás,
+    # ....)") és az alábbiakban részletezendő tényleges válasz - az elsőt egy
+    # semleges "stb."-vel zárjuk, mert a kérdőívnek csak a másodikra van
+    # konkrét adata.
+    fill_blanks(p[1153], ["stb.", a.get("evkozi_zarasok_feladatai", "")])
     fill_blanks(p[823], [a.get("kiegeszito_melleklet_sajatossagok", "")])
 
 
