@@ -4,7 +4,25 @@ Ez a projekt a "JELÖLT" számviteli politika sablon és az ügyfél-kérdőív
 alapján **automatikusan legenerál egy Word-vázlatot**, amit a kollégák
 átnéznek/pontosítanak, mielőtt kiküldik az ügyfélnek.
 
-## Hogyan működik
+## Kipróbálás - webes űrlap (ez a tényleges "rendszer")
+
+Nincs telepítés, nincs külső függőség - csak Python 3 kell hozzá:
+
+```bash
+python3 scripts/webapp.py
+```
+
+Ezután a böngészőben: **http://localhost:8000** - egy űrlap jelenik meg a
+kérdésekkel (kék háttér = ügyféltől kérdezendő, sárga = iroda tölti ki).
+Kitöltés után a "Vázlat legenerálása" gomb egyből **letölti a kész Word-
+vázlatot**. Ez a `data/questions.json`-t és a `scripts/generate_policy.py`
+motort futtatja a háttérben - nincs szükség JSON-fájl kézi szerkesztésére
+vagy parancssori használatra.
+
+(A `python3 scripts/webapp.py 8123` formával más portot is megadhatsz, ha
+a 8000-es foglalt.)
+
+## Hogyan működik belül
 
 ```
 data/questions.json          <- a kérdőív definíciója (mit kérdezünk az ügyféltől / mit tud a könyvelő)
@@ -12,10 +30,11 @@ data/answers.example.json    <- egy kitöltött minta-válaszkészlet (tesztelé
 sablon/szamviteli_politika_JELOLT.docx   <- az eredeti, feltöltött sablon
 sablon/merged.docx           <- a sablon "megtisztított" (összevont futású) másolata - ezt olvassa a script
 scripts/generate_policy.py   <- a fő motor: válaszok + sablon -> kitöltött Word-vázlat
+scripts/webapp.py            <- helyi webes űrlap a motor fölé (ezt érdemes használni)
 output/                      <- ide kerülnek a legenerált vázlatok
 ```
 
-Futtatás:
+Parancssorból (JSON válaszfájlból), ha nem a webes űrlapot használod:
 
 ```bash
 python3 scripts/generate_policy.py data/answers.example.json output/valami.docx
