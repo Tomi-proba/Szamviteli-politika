@@ -163,33 +163,41 @@
 
 <script>
 /* ====================== ADATOK: kérdésbank (csak ügyfél-kérdések) ====================== */
+// A TELJES adatbekérő ügyfélnek szánt kérdései, pontosan a forrás xlsx
+// sorrendjében - nem csak azok, amiknek van kitöltendő helyük a sablonban.
 const ALL_QUESTIONS = __QUESTIONS_JSON__;
 const QUESTIONS = ALL_QUESTIONS.filter(q => q.forras === "ugyfel");
 const QUESTIONS_BY_KEY = Object.fromEntries(ALL_QUESTIONS.map(q => [q.kulcs, q]));
 
-const SECTIONS = [
-  { id: "alapadatok", label: "Alapadatok", roman: "I.",
-    keys: ["penznem_tipus","penznem_atteres_datum","penznem_egyeb_neve","van_idegen_nyelvu_beszamolo","idegen_nyelv",
-           "merlegkeszites_nap","merlegkeszites_van_kivetel","merlegkeszites_kivetelek","fordulonap_honap","fordulonap_nap",
-           "beszamolo_alairoja"] },
-  { id: "felelosok", label: "Könyvvizsgálat és felelősök", roman: "II.",
-    keys: ["konyvvizsgalo_adatai","ertekelesi_delegalas","konyveles_felelos_nev_regszam","konyvvezetesert_felelos_szemely"] },
-  { id: "nyilvanossag", label: "Nyilvánosság, konszolidáció, leltár", roman: "III.",
-    keys: ["beszamolo_honlapon","beszamolo_honlap_cim","konszolidacio_reszletszabalyok",
-           "leltar_felelos_tipus","leltar_delegalas_reszletek"] },
-  { id: "kuszobok", label: "Jelentőségi küszöbök", roman: "IV.",
-    keys: ["jelentos_osszeg_bemutatas","jelentos_osszeg_ertelmezes","jelentos_mertek_hanyad",
-           "kiveteles_nagysag_osszeghatar","kiveteles_nagysag_sajattoke_szazalek",
-           "kiveteles_nagysag_bevetel_szazalek","kiveteles_nagysag_koltseg_szazalek"] },
-  { id: "konyvvezetes", label: "Könyvvezetés és bizonylatok", roman: "V.",
-    keys: ["konyvelo_program","bizonylat_konyveles_osszhang","bizonylatkezeles_szabalyai","evkozi_zarasok_feladatai"] },
-  { id: "eszkozok", label: "Eszközök", roman: "VI.",
-    keys: ["alapitas_atszervezes_aktivalja","alapitas_atszervezes_leiras_ev","van_cegertek","cegertek_leiras_ev",
-           "van_negativ_cegertek","negativ_cegertek_leiras_ev","ertekhelyesbites_immat_van","ertekhelyesbites_immat_javak",
-           "ertekhelyesbites_targyi_van","ertekhelyesbites_targyi_eszkoz","ertekhelyesbites_penzugyi_van",
-           "ertekhelyesbites_penzugyi_eszkoz","celtartalek_kepez","celtartalek_jelentos_hatar","celtartalek_elteres_szazalek",
-           "kiegeszito_melleklet_sajatossagok","ert4_alkalmazza_elhatarolas","bizomanyi_dij_hatar"] },
-];
+function sheetOf(q) { return q.eredeti.startsWith("Ért") ? "Értékelési szabályzat" : "Számviteli politika"; }
+function numOf(q) { const m = q.eredeti.match(/#(\d+)/); return m ? m[1] : q.eredeti; }
+
+// A kérdéseket a forrás sorrendjében kb. CHUNK_SIZE-onkénti szakaszokra
+// bontja (sosem egy összetartozó kérdés-csoport közepén), a lap (Számviteli
+// politika / Értékelési szabályzat) váltásánál mindig új szakaszt kezd.
+function buildAutoSections(questions, chunkSize) {
+  const sections = [];
+  let current = [];
+  let currentSheet = null;
+  function flush() {
+    if (!current.length) return;
+    sections.push({ id: "sec" + sections.length, label: currentSheet, keys: current.map(q => q.kulcs) });
+    current = [];
+  }
+  questions.forEach((q, i) => {
+    const sheet = sheetOf(q);
+    const prevSameGroup = i > 0 && sheetOf(questions[i - 1]) === sheet && numOf(questions[i - 1]) === numOf(q);
+    if (sheet !== currentSheet) {
+      flush();
+      currentSheet = sheet;
+    } else if (current.length >= chunkSize && !prevSameGroup) {
+      flush();
+    }
+    current.push(q);
+  });
+  flush();
+  return sections;
+}
 
 /* ====================== FORM RENDERELÉS ====================== */
 function fieldHtml(q) {
@@ -217,15 +225,16 @@ function fieldHtml(q) {
 }
 
 function renderForm() {
+  const sections = buildAutoSections(QUESTIONS, 12);
   const byKey = Object.fromEntries(QUESTIONS.map(q => [q.kulcs, q]));
   const groupsEl = document.getElementById("groups");
   let html = "";
-  SECTIONS.forEach(sec => {
+  sections.forEach(sec => {
     const fields = sec.keys.map(k => byKey[k]).filter(Boolean).map(fieldHtml).join("");
     if (!fields) return;
     html += `
       <section class="group" id="sec-${sec.id}">
-        <div class="group-head"><h2>${sec.label}</h2><span class="group-num">${sec.roman}</span></div>
+        <div class="group-head"><h2>${sec.label}</h2></div>
         ${fields}
       </section>`;
   });

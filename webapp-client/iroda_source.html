@@ -131,6 +131,10 @@
   .tag.ugyfel { background: var(--tag-ugyfel-soft); color: var(--tag-ugyfel); }
   .tag.iroda { background: var(--tag-iroda-soft); color: var(--tag-iroda); }
 
+  .no-sablon-note {
+    margin: 0.4rem 0 0; font-size: 0.78rem; font-style: italic; color: var(--ink-muted);
+  }
+
   input[type="text"], select {
     width: 100%; padding: 0.55rem 0.7rem; font-size: 0.94rem; font-family: var(--sans);
     color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px;
@@ -275,37 +279,52 @@
 
 <script>
 /* ====================== ADATOK: kérdésbank + sablon ====================== */
+// A TELJES adatbekérő (Számviteli politika + Értékelési szabályzat), pontosan
+// a forrás xlsx sorrendjében - ez tartalmazza azokat a kérdéseket is, amikhez
+// jelenleg nincs kitöltendő hely a sablonban (ld. q._nincs_sablonhely).
 const QUESTIONS = __QUESTIONS_JSON__;
-
-const SECTIONS = [
-  { id: "alapadatok", label: "Alapadatok", roman: "III&ndash;IV.", note: "A beszámoló nyelve, pénzneme, fordulónapja, aláírója.",
-    keys: ["penznem_tipus","penznem_atteres_datum","penznem_egyeb_neve","van_idegen_nyelvu_beszamolo","idegen_nyelv",
-           "merlegkeszites_nap","merlegkeszites_van_kivetel","merlegkeszites_kivetelek","fordulonap_honap","fordulonap_nap",
-           "beszamolo_alairoja"] },
-  { id: "felelosok", label: "Könyvvizsgálat és felelősök", roman: "II&ndash;III.", note: "Ki felel a könyvelésért, van-e könyvvizsgálati kötelezettség.",
-    keys: ["konyvvizsgalat_tipus","konyvvizsgalo_adatai","fenntarthatosagi_jelentes","ertekeles_felelos_tipus",
-           "ertekelesi_delegalas","konyveles_felelos_tipus","konyveles_felelos_nev_regszam","konyvvezetesert_felelos_szemely"] },
-  { id: "nyilvanossag", label: "Nyilvánosság és konszolidáció", roman: "III.3, V, II.4", note: "Közzététel, vállalatcsoporti helyzet, leltározás felelőse.",
-    keys: ["beszamolo_honlapon","beszamolo_honlap_cim","konszolidacio_tipus","konszolidacio_reszletszabalyok",
-           "leltar_felelos_tipus","leltar_delegalas_reszletek"] },
-  { id: "kuszobok", label: "Jelentőségi küszöbök", roman: "IV.9, VI.", note: "Mekkora összeg/arány számít jelentősnek, kivételesnek.",
-    keys: ["jelentos_osszeg_bemutatas","jelentos_osszeg_ertelmezes","jelentos_mertek_hanyad",
-           "kiveteles_nagysag_osszeghatar","kiveteles_nagysag_sajattoke_szazalek",
-           "kiveteles_nagysag_bevetel_szazalek","kiveteles_nagysag_koltseg_szazalek"] },
-  { id: "konyvvezetes", label: "Könyvvezetés és bizonylatok", roman: "VII.", note: "Könyvelőprogram, bizonylatolás, évközi zárlatok.",
-    keys: ["konyvelo_program","bizonylat_konyveles_osszhang","bizonylatkezeles_szabalyai","evkozi_zarasok_feladatai"] },
-  { id: "eszkozok", label: "Eszközök értékelése", roman: "VIII, XII.", note: "Aktiválás, cégérték, értékhelyesbítés, céltartalék.",
-    keys: ["alapitas_atszervezes_aktivalja","alapitas_atszervezes_leiras_ev","van_cegertek","cegertek_leiras_ev",
-           "van_negativ_cegertek","negativ_cegertek_leiras_ev","ertekhelyesbites_immat_van","ertekhelyesbites_immat_javak",
-           "ertekhelyesbites_targyi_van","ertekhelyesbites_targyi_eszkoz","ertekhelyesbites_penzugyi_van",
-           "ertekhelyesbites_penzugyi_eszkoz","celtartalek_kepez","celtartalek_jelentos_hatar","celtartalek_elteres_szazalek",
-           "kiegeszito_melleklet_sajatossagok","ert4_alkalmazza_elhatarolas","bizomanyi_dij_hatar"] },
-];
 
 const TEMPLATE_B64 = "__TEMPLATE_B64__";
 
 /* ====================== FORM RENDERELÉS ====================== */
 function humanize(v) { return v.replace(/_/g, " "); }
+
+function sheetOf(q) { return q.eredeti.startsWith("Ért") ? "Értékelési szabályzat" : "Számviteli politika"; }
+function numOf(q) { const m = q.eredeti.match(/#(\d+)/); return m ? m[1] : q.eredeti; }
+
+// A kérdéseket a forrás sorrendjében kb. CHUNK_SIZE-onkénti szakaszokra
+// bontja (sosem egy összetartozó kérdés-csoport közepén), a lap (Számviteli
+// politika / Értékelési szabályzat) váltásánál mindig új szakaszt kezd.
+function buildAutoSections(questions, chunkSize) {
+  const sections = [];
+  let current = [];
+  let currentSheet = null;
+  function flush() {
+    if (!current.length) return;
+    const first = numOf(current[0]);
+    const last = numOf(current[current.length - 1]);
+    sections.push({
+      id: "sec" + sections.length,
+      label: currentSheet,
+      roman: first === last ? `#${first}` : `#${first}–${last}`,
+      keys: current.map(q => q.kulcs),
+    });
+    current = [];
+  }
+  questions.forEach((q, i) => {
+    const sheet = sheetOf(q);
+    const prevSameGroup = i > 0 && sheetOf(questions[i - 1]) === sheet && numOf(questions[i - 1]) === numOf(q);
+    if (sheet !== currentSheet) {
+      flush();
+      currentSheet = sheet;
+    } else if (current.length >= chunkSize && !prevSameGroup) {
+      flush();
+    }
+    current.push(q);
+  });
+  flush();
+  return sections;
+}
 
 function fieldHtml(q) {
   const forrasClass = q.forras === "ugyfel" ? "ugyfel" : "iroda";
@@ -325,23 +344,28 @@ function fieldHtml(q) {
   } else {
     input = `<input type="text" id="f_${q.kulcs}" name="${q.kulcs}">`;
   }
+  const noSablonNote = q._nincs_sablonhely
+    ? `<p class="no-sablon-note">Nincs kitöltendő helye a jelenlegi sablonban - a válasz csak nyilvántartásra kerül, a vázlatba nem kerül be automatikusan.</p>`
+    : "";
   return `
     <div class="field" ${dataAttrs}>
       <div class="field-label">
-        <label for="f_${q.kulcs}">${q.kerdes}</label>
+        <label for="f_${q.kulcs}">${q.eredeti} &middot; ${q.kerdes}</label>
         <span class="tag ${forrasClass}">${forrasLabel}</span>
       </div>
       ${input}
+      ${noSablonNote}
     </div>`;
 }
 
 function renderForm() {
+  const sections = buildAutoSections(QUESTIONS, 12);
   const byKey = Object.fromEntries(QUESTIONS.map(q => [q.kulcs, q]));
   const groupsEl = document.getElementById("groups");
   const tocEl = document.getElementById("toc");
   let groupsHtml = "";
   let tocHtml = "";
-  SECTIONS.forEach((sec, i) => {
+  sections.forEach((sec, i) => {
     const fields = sec.keys.map(k => byKey[k]).filter(Boolean).map(fieldHtml).join("");
     groupsHtml += `
       <section class="group" id="sec-${sec.id}">
@@ -349,10 +373,9 @@ function renderForm() {
           <h2>${sec.label}</h2>
           <span class="group-num">${sec.roman}</span>
         </div>
-        <p class="group-note">${sec.note}</p>
         ${fields}
       </section>`;
-    tocHtml += `<a href="#sec-${sec.id}">${String(i + 1).padStart(2, "0")} &middot; ${sec.label}</a>`;
+    tocHtml += `<a href="#sec-${sec.id}">${String(i + 1).padStart(2, "0")} &middot; ${sec.label} ${sec.roman}</a>`;
   });
   groupsEl.innerHTML = groupsHtml;
   tocEl.innerHTML = tocHtml;

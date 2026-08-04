@@ -113,19 +113,29 @@ A script:
 
 ## FONTOS – amit ez a verzió NEM fed le
 
-A feltöltött kérdőív (`kerdesek_szerint_v2.xlsx`) 136 kérdést tartalmaz, de
-ebből **csak 25-nek van kitöltendő helye ebben a sablonban** (a többi a
-mellékletekhez - leltár-, pénzkezelési, értékelési szabályzat - tartozna,
-azokból viszont nincs feltöltött sablon).
+A `data/questions.json` **a teljes, hivatalos adatbekérőt tartalmazza** (a
+Számviteli politika + Értékelési szabályzat adatbekérő 115 kérdését,
+pontosan a forrás xlsx sorrendjében) - ebből azonban **csak 25 kérdésnek
+van kitöltendő helye ebben a sablonban**. A többi 90 kérdés (pl. cégadatok,
+könyvelési gyakorlat részletei, eszközértékelési szabályok stb.) az
+űrlapon megjelenik és a válasz összegyűjtésre kerül (az ügyfél kódjában,
+majd az iroda oldalon), de a `generate_policy.py` / `resolve.js` motor
+**nem helyettesíti be automatikusan semmilyen bekezdésbe** - ezeket a
+`questions.json`-ban az adott kérdés `"_nincs_sablonhely": true` jelzi, és
+az iroda-oldalon minden ilyen mező alatt egy magyarázó megjegyzés is
+látható. (A hiányzó 90 kérdés jó része a mellékletekhez - leltár-,
+pénzkezelési szabályzat - tartozna, azokból viszont nincs feltöltött
+sablon; másik része olyan VAGY-alternatívát fed le a sablonban, amit még
+nem kötöttünk össze a kérdőívvel.)
 
 Emellett maga a sablon **jóval több döntési pontot (VAGY-alternatívát)
-tartalmaz**, mint amennyit ez a 25 kérdés lefed - különösen a VIII. fejezet
-(eszközök és források értékelése), ami önmagában több száz bekezdésnyi
-választási lehetőséget sorol fel (pl. eszközcsoportonkénti értékelési
-módszerek, écs-kulcsok, minden egyes elszámolási VAGY-döntés). **Ezeket a
-script szándékosan nem nyúlja hozzá** - pontosan úgy maradnak a kimeneti
-fájlban (sárga kiemeléssel, VAGY-gal), mint az eredeti JELÖLT sablonban,
-mert nincs hozzájuk ügyféladat.
+tartalmaz**, mint amennyit a 25 bekötött kérdés lefed - különösen a VIII.
+fejezet (eszközök és források értékelése), ami önmagában több száz
+bekezdésnyi választási lehetőséget sorol fel (pl. eszközcsoportonkénti
+értékelési módszerek, écs-kulcsok, minden egyes elszámolási VAGY-döntés).
+**Ezeket a script szándékosan nem nyúlja hozzá** - pontosan úgy maradnak a
+kimeneti fájlban (sárga kiemeléssel, VAGY-gal), mint az eredeti JELÖLT
+sablonban, mert nincs hozzájuk kötött kérdés.
 
 Vagyis a legenerált dokumentum egy **részleges vázlat**: a "törzsadat"
 jellegű részeket (pénznem, fordulónap, aláíró, könyvvizsgálat,
@@ -134,7 +144,9 @@ jelentőségi küszöbök stb.) kitölti, de a döntés nagy részét (elsősorb
 VIII. fejezet eszközértékelési politikáját) továbbra is a kollégának kell
 kézzel elvégeznie - pontosan úgy, ahogy most is teszi. **Ez így is valós
 időmegtakarítás**, mert a leggyakrabban változó, ügyfélspecifikus
-"törzsadatokat" nem kell manuálisan átírni és a helyükön keresgélni.
+"törzsadatokat" nem kell manuálisan átírni és a helyükön keresgélni - és
+mert a kérdőív a teljes adatbekérőt lefedi, az iroda egyetlen helyen látja
+az összes választ, akkor is, ha egy részüket még kézzel kell felhasználnia.
 
 ### Ha a teljes dokumentumot szeretnék automatizálni
 
