@@ -4,39 +4,57 @@ Ez a projekt a "JELÖLT" számviteli politika sablon és az ügyfél-kérdőív
 alapján **automatikusan legenerál egy Word-vázlatot**, amit a kollégák
 átnéznek/pontosítanak, mielőtt kiküldik az ügyfélnek.
 
-## Kipróbálás - két féle "rendszer" közül lehet választani
+## Két külön oldal - az ügyfél és az iroda soha nem lát ugyanazt
 
-**A) Böngészőben futó, publikált oldal (nincs telepítés, csak egy link)**
 A `webapp-client/` mappa egy teljesen önálló, kliens-oldali (böngészőben
-futó) változat - nincs szükség Python-ra a felhasználó gépén, mert a teljes
-motor (ZIP-írás/olvasás, docx-szerkesztés) JavaScriptben újraírva fut. Ebből
-építhető egy publikálható, egyetlen HTML-fájlból álló oldal:
+futó) rendszert épít, KÉT külön HTML-fájlból - nincs szükség Python-ra vagy
+szerverre a végfelhasználók gépén:
 
 ```bash
-python3 webapp-client/build.py   # -> webapp-client/dist.html
+python3 webapp-client/build.py
+# -> webapp-client/dist_ugyfel.html
+# -> webapp-client/dist_iroda.html
 ```
 
-A `dist.html` egy statikus, önálló fájl (a sablon és a kérdőív be van égetve
-base64-ként) - egy erre alkalmas felületen (pl. Claude Artifact) közzétéve
-egy sima linkként megnyitható, kattintható eszközzé válik: kitöltés ->
-"Vázlat legenerálása" -> letöltés, mind a böngészőben, szerver nélkül.
+**`dist_ugyfel.html` - ezt küldjétek ki az ügyfélnek.** Csak az ügyféltől
+kérdezendő mezőket tartalmazza (a szakmai minősítést igénylő "iroda" kérdések
+nincsenek benne), és **nem generál semmilyen dokumentumot** - a kitöltés
+végén egy kódot ad, amit az ügyfél e-mailben visszaküld. Az ügyfél ebből az
+oldalból semmit nem tud kikövetkeztetni az automatizálásról vagy a végleges
+dokumentumról.
 
-**B) Helyi Python-os webform (ha van, aki tud terminált használni)**
+**`dist_iroda.html` - ez a belső, jelszóval védett eszköz.** Itt illeszthető
+be az ügyféltől kapott kód (ez előtölti az ügyfél válaszait), itt tölthetők
+ki a fennmaradó, szakmai minősítést igénylő mezők, és csak itt lehet
+legenerálni a Word-vázlatot. **A jelszó alapértelmezetten `Politika2026!`**
+- ez KIZÁRÓLAG visszatartás, nem valódi hozzáférés-vezérlés (statikus oldal,
+nincs szerver, egy technikailag értő személy a forráskódból kiolvashatná a
+hash-elés módját). Cseréhez:
+
+```bash
+python3 webapp-client/hash_password.py "ÚjJelszó"
+# a kiírt hash-t írd be az iroda_source.html PASSWORD_HASH konstansába,
+# majd futtasd újra a build.py-t
+```
+
+**Helyi Python-os webform** (ha valaki tud terminált használni, és nem kell
+a kétoldali ügyfél/iroda szétválasztás):
 
 ```bash
 python3 scripts/webapp.py
 ```
 
-Ezután a böngészőben: **http://localhost:8000** - ugyanaz a kérdőív, csak
-Python-szerveren keresztül futtatva (`scripts/generate_policy.py`).
-(A `python3 scripts/webapp.py 8123` formával más portot is megadhatsz, ha
-a 8000-es foglalt.)
+Ezután a böngészőben: **http://localhost:8000** - ugyanaz az (egybeépített,
+jelszó nélküli) kérdőív, Python-szerveren keresztül futtatva
+(`scripts/generate_policy.py`). Ez a régebbi, egyoldalas változat - inkább
+fejlesztés/tesztelés közben hasznos, éles használatra a fenti két HTML-oldal
+ajánlott.
 
-**A/B eltérés:** mindkettő A/UGYANAZT a motorlogikát futtatja (a Python és a
-JS változat tesztekkel ellenőrzötten pontosan azonos kimenetet ad ugyanazon
-válaszokra) - csak a futtatás módja más. Ha a sablon szövege változik, MINDKÉT
-oldali (Python + JS) `resolve_*` logikát frissíteni kell, mert a bekezdés-
-indexek mindkettőben hard-code-olva vannak.
+**Fontos:** mindegyik változat UGYANAZT a motorlogikát futtatja (a Python és
+a JS változat tesztekkel ellenőrzötten pontosan azonos kimenetet ad ugyanazon
+válaszokra). Ha a sablon szövege változik, MINDKÉT oldali (Python + JS)
+`resolve_*` logikát frissíteni kell, mert a bekezdés-indexek mindkettőben
+hard-code-olva vannak.
 
 ## Hogyan működik belül
 
@@ -46,14 +64,26 @@ data/answers.example.json    <- egy kitöltött minta-válaszkészlet (tesztelé
 sablon/szamviteli_politika_JELOLT.docx   <- az eredeti, feltöltött sablon
 sablon/merged.docx           <- a sablon "megtisztított" (összevont futású) másolata - ezt olvassa a script
 scripts/generate_policy.py   <- a fő motor (Python): válaszok + sablon -> kitöltött Word-vázlat
-scripts/webapp.py            <- helyi Python webform a motor fölé
+scripts/webapp.py            <- helyi Python webform a motor fölé (egyoldalas, jelszó nélküli)
 webapp-client/zip.js         <- minimál ZIP olvasó/író böngészőben (CompressionStream alapú)
 webapp-client/docx.js        <- docx bekezdés/futás-szintű segédfüggvények böngészőben
 webapp-client/resolve.js     <- a generate_policy.py resolve_* függvényeinek JS portja
-webapp-client/page_source.html <- az oldal HTML/CSS/JS sablonja (build.py egészíti ki adattal)
-webapp-client/build.py       <- összeállítja a publikálható dist.html-t
-output/                      <- ide kerülnek a legenerált vázlatok
+webapp-client/ugyfel_source.html <- az ügyfél-oldal sablonja (build.py egészíti ki adattal)
+webapp-client/iroda_source.html  <- az iroda-oldal sablonja (jelszó-kapu + kódimport)
+webapp-client/hash_password.py   <- jelszó-hash generátor az iroda-oldalhoz
+webapp-client/build.py       <- összeállítja a publikálható dist_ugyfel.html / dist_iroda.html fájlokat
+output/                      <- ide kerülnek a Python scripttel legenerált vázlatok
 ```
+
+### A kódos átadás működése
+
+Az ügyfél-oldal a válaszokat egy base64-be kódolt JSON-ná ("kód") alakítja,
+amit az ügyfél e-mailben küld vissza (a "Küldés e-mailben" gomb egy előre
+kitöltött e-mailt nyit meg). Az iroda-oldal ezt a kódot dekódolja és
+előtölti vele a saját, azonos mezőit. Ha az irodának saját, fix e-mail
+címe van, ahova ezt kéritek, írd be az `ugyfel_source.html`
+`OFFICE_EMAIL` konstansába, majd futtasd újra a `build.py`-t - így a
+"Küldés e-mailben" gomb már eleve ki lesz címezve.
 
 Parancssorból (JSON válaszfájlból), ha nem a webes űrlapot használod:
 

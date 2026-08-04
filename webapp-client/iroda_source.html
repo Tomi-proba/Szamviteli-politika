@@ -172,24 +172,87 @@
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
+
+  /* --- belépő kapu --- */
+  #gate {
+    position: fixed; inset: 0; background: var(--paper); display: flex;
+    align-items: center; justify-content: center; padding: 1.5rem; z-index: 10;
+  }
+  #gate.hidden { display: none; }
+  .gate-card {
+    max-width: 360px; width: 100%; background: var(--paper-raised); border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: var(--shadow); padding: 2rem 1.8rem;
+  }
+  .gate-card .eyebrow { margin-bottom: 0.8rem; }
+  .gate-card h1 { font-size: 1.4rem; margin-bottom: 0.6rem; }
+  .gate-card p { color: var(--ink-muted); font-size: 0.9rem; margin: 0 0 1.2rem; }
+  .gate-card input { margin-bottom: 0.8rem; }
+  .gate-card button {
+    width: 100%; font-family: var(--sans); font-weight: 600; font-size: 0.95rem; color: #fff;
+    background: var(--accent); border: none; border-radius: 8px; padding: 0.7rem; cursor: pointer;
+  }
+  .gate-card button:hover { background: var(--accent-ink); }
+  #gateError { color: var(--flag); font-size: 0.85rem; margin-top: 0.7rem; display: none; }
+  #gateError.show { display: block; }
+
+  .import-box {
+    background: var(--accent-soft); border: 1px solid var(--line); border-radius: 10px;
+    padding: 1.4rem 1.6rem; margin-bottom: 1.4rem;
+  }
+  .import-box h2 { margin: 0 0 0.3rem; }
+  .import-box p { color: var(--ink-muted); font-size: 0.87rem; margin: 0 0 0.8rem; }
+  .import-box textarea {
+    width: 100%; min-height: 4.5rem; font-family: var(--mono); font-size: 0.82rem; padding: 0.6rem 0.7rem;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); resize: vertical;
+  }
+  .import-box .row { display: flex; gap: 0.6rem; margin-top: 0.7rem; align-items: center; }
+  .import-box button {
+    font-family: var(--sans); font-weight: 600; font-size: 0.88rem; color: var(--accent-ink);
+    background: transparent; border: 1px solid var(--accent); border-radius: 6px; padding: 0.5rem 1rem; cursor: pointer;
+  }
+  .import-box button:hover { background: var(--paper-raised); }
+  .import-box .import-status { font-size: 0.85rem; color: var(--ink-muted); }
 </style>
 
-<div class="shell">
+<div id="gate">
+  <div class="gate-card">
+    <p class="eyebrow">Iroda &middot; belépés</p>
+    <h1>Csak belső használatra</h1>
+    <p>Ez a nézet az ügyfélnek elküldött kérdőívre adott válaszokból elkészíti a
+       vázlatot. Add meg a jelszót a folytatáshoz.</p>
+    <input type="password" id="gatePassword" placeholder="Jelszó" autocomplete="current-password">
+    <button type="button" id="gateSubmit">Belépés</button>
+    <p id="gateError">Hibás jelszó.</p>
+  </div>
+</div>
+
+<div class="shell hidden" id="mainShell">
   <header class="masthead">
     <p class="eyebrow">Belső eszköz &middot; vázlatgenerátor</p>
     <h1>Számviteli politika &ndash; automatikus vázlat</h1>
     <p class="lede">
-      Töltsd ki az alábbi kérdéseket, majd generáld le a Word-vázlatot. A dokumentum
-      minden futtatáskor a böngésződben áll össze a JELÖLT sablonból &ndash; semmi nem
-      kerül külső szerverre. A letöltött fájl egy <strong>vázlat</strong>: mielőtt
-      kimegy az ügyfélnek, egy kollégának át kell néznie, különös tekintettel a
-      pirossal jelölt, ellenőrizendő részekre.
+      Illeszd be az ügyféltől kapott kódot, töltsd ki a fennmaradó kérdéseket, majd
+      generáld le a Word-vázlatot. A dokumentum minden futtatáskor a böngésződben áll
+      össze a JELÖLT sablonból &ndash; semmi nem kerül külső szerverre. A letöltött
+      fájl egy <strong>vázlat</strong>: mielőtt kimegy az ügyfélnek, nézd át, különös
+      tekintettel a pirossal jelölt, ellenőrizendő részekre.
     </p>
     <div class="legend">
       <span class="chip ugyfel"><span class="dot"></span>ügyféltől kérdezendő</span>
       <span class="chip iroda"><span class="dot"></span>iroda tölti ki</span>
     </div>
   </header>
+
+  <div class="import-box">
+    <h2>Ügyfélkód beillesztése</h2>
+    <p>Az ügyfél kérdőívének végén kapott kódot illeszd be ide - a kék (ügyféltől
+       kérdezendő) mezők automatikusan kitöltődnek belőle.</p>
+    <textarea id="importCode" placeholder="Ide illeszd be a kódot..."></textarea>
+    <div class="row">
+      <button type="button" id="importBtn">Beolvasás</button>
+      <span class="import-status" id="importStatus"></span>
+    </div>
+  </div>
 
   <nav class="toc" id="toc"></nav>
 
@@ -394,4 +457,63 @@ document.getElementById("policyForm").addEventListener("submit", async (ev) => {
 renderForm();
 applyVisibility();
 document.addEventListener("change", applyVisibility);
+
+/* ====================== KÓD KÓDOLÁS/DEKÓDOLÁS ====================== */
+function decodeAnswersCode(code) {
+  const binary = atob(code.trim());
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  const raw = document.getElementById("importCode").value;
+  const statusEl = document.getElementById("importStatus");
+  if (!raw.trim()) {
+    statusEl.textContent = "Nincs beillesztett kód.";
+    return;
+  }
+  try {
+    const answers = decodeAnswersCode(raw);
+    let filled = 0;
+    for (const [key, value] of Object.entries(answers)) {
+      const el = document.querySelector(`[name="${key}"]`);
+      if (el) { el.value = value; filled++; }
+    }
+    applyVisibility();
+    statusEl.textContent = `${filled} mező kitöltve az ügyfél válaszaiból.`;
+  } catch (e) {
+    statusEl.textContent = "A kód nem olvasható be - kérd meg az ügyfelet, hogy küldje el újra.";
+  }
+});
+
+/* ====================== BELÉPŐ KAPU ====================== */
+// FIGYELEM: ez csak visszatartás, nem valódi hozzáférés-vezérlés - az oldal
+// statikus HTML/JS, nincs szerver. A hash cseréjéhez: hash_password.py.
+const PASSWORD_HASH = "ad1d438d40aae676e23c1a41a4221b689dab1856742c1deb9bdb9343222d9104";
+
+async function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function tryUnlock() {
+  const pw = document.getElementById("gatePassword").value;
+  const hash = await sha256Hex(pw);
+  const errEl = document.getElementById("gateError");
+  if (hash === PASSWORD_HASH) {
+    document.getElementById("gate").classList.add("hidden");
+    document.getElementById("mainShell").classList.remove("hidden");
+    errEl.classList.remove("show");
+  } else {
+    errEl.classList.add("show");
+  }
+}
+
+document.getElementById("gateSubmit").addEventListener("click", tryUnlock);
+document.getElementById("gatePassword").addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") tryUnlock();
+});
+document.getElementById("gatePassword").focus();
 </script>
