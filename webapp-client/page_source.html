@@ -331,6 +331,23 @@ function clearStatus() {
   el.innerHTML = "";
 }
 
+function downloadViaBrowser(bytes, filename) {
+  // Sima böngészős letöltés (window.claude.downloads nélkül) - ez fut, ha
+  // az oldalt nem a claude.ai Artifact-nézetben, hanem simán fájlként
+  // nyitották meg.
+  const blob = new Blob([bytes], {
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
 const DOWNLOAD_ERROR_MESSAGES = {
   extension_not_enabled: "A .docx fájltípus nincs engedélyezve ebben a nézetben, ezért nem tudom automatikusan letöltésre kínálni a vázlatot. Kérd meg a rendszergazdát, hogy engedélyezze a kiterjesztett fájltípusokat, vagy nyisd meg ezt az oldalt egy olyan nézetben, ahol ez engedélyezett.",
   too_large: "A legenerált dokumentum túl nagy a letöltéshez (16 MB felett). Ez nem várt - jelezd, ha ezt látod.",
@@ -353,16 +370,13 @@ document.getElementById("policyForm").addEventListener("submit", async (ev) => {
   try {
     const answers = collectAnswers();
     const bytes = await generateFromAnswers(TEMPLATE_B64, answers);
+    const filename = "szamviteli_politika_vazlat.docx";
 
-    if (!window.claude || !window.claude.downloads) {
-      setStatus("err", "A letöltés funkció nem elérhető ebben a nézetben, pedig a vázlat elkészült a böngésződben. Próbáld meg claude.ai-on, bejelentkezve megnyitni ezt az oldalt.");
-      return;
+    if (window.claude && window.claude.downloads) {
+      await window.claude.downloads.save({ filename, data: bytes });
+    } else {
+      downloadViaBrowser(bytes, filename);
     }
-
-    await window.claude.downloads.save({
-      filename: "szamviteli_politika_vazlat.docx",
-      data: bytes,
-    });
     setStatus("ok", "A vázlat elkészült és letöltésre került. Mielőtt kimegy az ügyfélnek, nézd át - a piros “⚠ ELLENŐRIZENDŐ” jelölésekre és a még sárga/kék (döntetlen) részekre figyelj.");
   } catch (err) {
     const code = err && err.code;
