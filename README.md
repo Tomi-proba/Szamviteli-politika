@@ -61,10 +61,14 @@ hard-code-olva vannak.
 ```
 data/questions.json          <- a kérdőív definíciója (mit kérdezünk az ügyféltől / mit tud a könyvelő)
 data/answers.example.json    <- egy kitöltött minta-válaszkészlet (teszteléshez)
+data/answers.example2.json   <- második minta, az ELLENTÉTES VAGY-ágakat gyakorolja
 sablon/szamviteli_politika_JELOLT.docx   <- az eredeti, feltöltött sablon
 sablon/merged.docx           <- a sablon "megtisztított" (összevont futású) másolata - ezt olvassa a script
+sablon/*_2026_megjelolve.docx <- a 2026-os, előre megjelölt változat (csak hivatkozási térkép, ld. lentebb)
 scripts/generate_policy.py   <- a fő motor (Python): válaszok + sablon -> kitöltött Word-vázlat
 scripts/webapp.py            <- helyi Python webform a motor fölé (egyoldalas, jelszó nélküli)
+scripts/dev/parity_check.py  <- Python <-> JS motor-paritás teszt (Playwright/Chromium)
+scripts/dev/content_check.py <- tartalmi ellenőrzés a legenerált vázlaton
 webapp-client/zip.js         <- minimál ZIP olvasó/író böngészőben (CompressionStream alapú)
 webapp-client/docx.js        <- docx bekezdés/futás-szintű segédfüggvények böngészőben
 webapp-client/resolve.js     <- a generate_policy.py resolve_* függvényeinek JS portja
@@ -111,51 +115,125 @@ A script:
    látható, félkövér piros "⚠ ELLENŐRIZENDŐ" jelölést szúr be a bekezdés elé,
    és a szövegrészt eredeti, kitöltetlen állapotban hagyja.
 
-## FONTOS – amit ez a verzió NEM fed le
+## Lefedettség – mit tölt ki és mit NEM
 
 A `data/questions.json` **a teljes, hivatalos adatbekérőt tartalmazza** (a
-Számviteli politika + Értékelési szabályzat adatbekérő 115 kérdését,
-pontosan a forrás xlsx sorrendjében) - ebből azonban **csak 25 kérdésnek
-van kitöltendő helye ebben a sablonban**. A többi 90 kérdés (pl. cégadatok,
-könyvelési gyakorlat részletei, eszközértékelési szabályok stb.) az
-űrlapon megjelenik és a válasz összegyűjtésre kerül (az ügyfél kódjában,
-majd az iroda oldalon), de a `generate_policy.py` / `resolve.js` motor
-**nem helyettesíti be automatikusan semmilyen bekezdésbe** - ezeket a
+Számviteli politika + Értékelési szabályzat kérdéseit, pontosan a forrás
+xlsx sorrendjében), kiegészítve néhány, csak az irodán belül eldönthető
+választó-kérdéssel.
+
+| | darab |
+|---|---|
+| kérdés összesen a `questions.json`-ban | **150** |
+| ebből a motor automatikusan behelyettesíti / ág-választásra használja | **64** |
+| ebből jelenleg nincs kitöltendő helye a sablonban (`_nincs_sablonhely`) | **86** |
+| lefedett *forrás*-kérdés (Szv#/Ért# szám szerint) | **35** |
+| `resolve_*` függvény (Python és JS oldalon egyaránt) | **27** |
+
+A bekötött forráskérdések: Szv#12, 13, 14, 15, 16, 17, 18, 19, 21, 25/28,
+29, 31, 32, 33, 35, 36, 37, 39, 41, 43, 44, 45, 49, 50, 57, 59, 61, 63,
+83, 94, 95, 96, 101, 106 és Ért#4. (A Szv#95-höz felvett választó-kérdés
+egyben az Ért#5 által is jelölt döntési pontot oldja fel – ugyanaz a
+bekezdés-csoport.)
+
+A fennmaradó ~86 kérdés (cégadatok, könyvelési gyakorlat részletei,
+eszközértékelési szabályok stb.) az űrlapon megjelenik és a válasz
+összegyűjtésre kerül (az ügyfél kódjában, majd az iroda oldalon), de a
+motor **nem helyettesíti be automatikusan semmilyen bekezdésbe** – ezeket a
 `questions.json`-ban az adott kérdés `"_nincs_sablonhely": true` jelzi, és
 az iroda-oldalon minden ilyen mező alatt egy magyarázó megjegyzés is
-látható. (A hiányzó 90 kérdés jó része a mellékletekhez - leltár-,
-pénzkezelési szabályzat - tartozna, azokból viszont nincs feltöltött
-sablon; másik része olyan VAGY-alternatívát fed le a sablonban, amit még
-nem kötöttünk össze a kérdőívvel.)
+látható.
+
+### Miért nincs bekötve a többi jelölt kérdés
+
+A 2026-os, előre megjelölt sablonváltozat (`sablon/*_2026_megjelolve.docx`,
+ld. lentebb) 60 helyet jelöl meg. Ezek egy részéhez **szándékosan nem
+készült automatizmus**, mert a sablon szerkezete nem teszi biztonságossá:
+
+- **Nincs sem kitöltendő hely, sem VAGY-alternatíva** a jelölt bekezdésnél,
+  csak beégetett törvényi szöveg (pl. Szv#40 jelentős hibahatár = a
+  mérlegfőösszeg 2%-a, Szv#42 tartós tendencia = 365 nap, Szv#70 a
+  200 eFt-os értékhatár, Szv#108 TAO/KIVA, Szv#110 GloBE). Ide egy válasz
+  behelyettesítéséhez a mondat szövegét kellene átírni, amire a motor
+  bekezdés- és futás-szintű primitívjei nem alkalmasak.
+- **A válasz egy TÁBLÁZATBA tartozna** (Szv#51/52/53 aláírásra jogosultak,
+  Szv#54 feldolgozási határidők, Szv#55/56 zárlati ütemezés, Szv#75/76/84/87
+  értékvesztési %-os mértékek). A motor kizárólag a törzs bekezdéseivel
+  dolgozik, táblázatot nem módosít és nem is töröl – így pl. a Szv#51/52
+  VAGY-ágának törlése egy árván maradt táblázatot hagyna a dokumentumban.
+- **A jelölés egy kötelező törvényi felsorolás egy sorára mutat**
+  (Szv#66/67/68 környezetvédelmi közzétételek a kiegészítő melléklet
+  tartalomjegyzékében). Egy "nem" válasz alapján statutórius szövegsort
+  törölni szakmai döntés; ráadásul a jelölések itt bizonyíthatóan
+  elcsúsztak (a Szv#66 jelölése nem a tárgyi eszközös, hanem a
+  céltartalékos sor elé került).
+- **A VAGY-ág szerkezete kétértelmű**: a Szv#60 (kísérleti fejlesztés
+  aktiválása) csoportban egy oda nem illő, "felesleges" VAGY-elválasztó
+  van a felvezető mondat és az első alternatíva között, így nem
+  egyértelmű, hogy a köztes 5 magyarázó bekezdés melyik ághoz tartozik.
+- **A "nem" ág csak mondatvég, nem önálló mondat** (Szv#19 szabályozott
+  piaci letétbe helyezési határidő, Szv#95 "nem számoljuk el halasztott
+  ráfordításként"). Ilyenkor a bekezdés törlése nyelvtanilag hibás mondatot
+  hagyna, ezért a motor ezekben az esetekben **nem töröl, hanem
+  `⚠ ELLENŐRIZENDŐ` jelölést szúr be** a bekezdés elé.
 
 Emellett maga a sablon **jóval több döntési pontot (VAGY-alternatívát)
-tartalmaz**, mint amennyit a 25 bekötött kérdés lefed - különösen a VIII.
-fejezet (eszközök és források értékelése), ami önmagában több száz
-bekezdésnyi választási lehetőséget sorol fel (pl. eszközcsoportonkénti
-értékelési módszerek, écs-kulcsok, minden egyes elszámolási VAGY-döntés).
-**Ezeket a script szándékosan nem nyúlja hozzá** - pontosan úgy maradnak a
-kimeneti fájlban (sárga kiemeléssel, VAGY-gal), mint az eredeti JELÖLT
-sablonban, mert nincs hozzájuk kötött kérdés.
+tartalmaz**, mint amennyit a bekötött kérdések lefednek – különösen a VIII.
+fejezet (eszközök és források értékelése). **Ezeket a script szándékosan
+nem nyúlja hozzá** – pontosan úgy maradnak a kimeneti fájlban (sárga
+kiemeléssel, VAGY-gal), mint az eredeti JELÖLT sablonban.
 
-Vagyis a legenerált dokumentum egy **részleges vázlat**: a "törzsadat"
-jellegű részeket (pénznem, fordulónap, aláíró, könyvvizsgálat,
-könyvelő/könyvvizsgáló felelős, leltár felelőse, konszolidáció,
-jelentőségi küszöbök stb.) kitölti, de a döntés nagy részét (elsősorban a
-VIII. fejezet eszközértékelési politikáját) továbbra is a kollégának kell
-kézzel elvégeznie - pontosan úgy, ahogy most is teszi. **Ez így is valós
-időmegtakarítás**, mert a leggyakrabban változó, ügyfélspecifikus
-"törzsadatokat" nem kell manuálisan átírni és a helyükön keresgélni - és
-mert a kérdőív a teljes adatbekérőt lefedi, az iroda egyetlen helyen látja
-az összes választ, akkor is, ha egy részüket még kézzel kell felhasználnia.
+Vagyis a legenerált dokumentum továbbra is egy **részleges vázlat**, de
+2026-tól már a beszámoló formája, a mérleg és az eredménykimutatás választott
+típusa, a teljes kiegészítő melléklet-blokk (éves vs. egyszerűsített), a
+költségelszámolás módja, a pénzkezelés felelőse és több értékelési
+VAGY-döntés is automatikusan feloldódik.
 
-### Ha a teljes dokumentumot szeretnék automatizálni
+## A 2026-os megjelölt sablon és a bekezdés-indexek
 
-Ehhez bővíteni kellene a kérdőívet úgy, hogy minden fennmaradó VAGY-döntést
-is lefedjen (jellemzően eszközértékelési politikai döntések), és a
-`generate_policy.py`-ban minden ilyen döntéshez fel kellene venni egy új
-`resolve_*` függvényt - ugyanazzal a mintával, mint a jelenlegi 17 függvény.
-Ez egy jelentősen nagyobb, több körös munka (a VIII. fejezet önmagában
-valószínűleg 60-80 további döntési pontot jelent).
+A `sablon/` mappában három forrásfájl van:
+
+| fájl | szerep |
+|---|---|
+| `szamviteli_politika_JELOLT.docx` | az eredeti, feltöltött JELÖLT sablon |
+| `merged.docx` | **ezt olvassa a motor** – a JELÖLT sablon összevont futású (run-merged) másolata |
+| `szamviteli_politika_JELOLT_2026_megjelolve.docx` + `merged_2026_megjelolve.docx` | a 2026-os, előre megjelölt változat (60 db `▶ Adatbékérő: …` jelölés) – **kizárólag hivatkozási térkép** |
+
+**A 2026-os fájl NEM lett a generálás alapja, és ez szándékos.** A két
+dokumentum jogi szövege lényegében azonos (`difflib` arány 0,96; az eltérés
+gyakorlatilag csak a `[Szv N. kérdés]` hivatkozások és a JELÖLT fejléc
+eltávolítása, plusz a 60 beszúrt jelölő bekezdés), **a 2026-os változatból
+azonban eltűnt a kitöltendő helyek formázása**: az eredeti sablonban minden
+kitöltendő hely sárga kiemelésű, áthúzott, piros futás (`……………`), a
+2026-osban viszont ezek sima kék szöveggé olvadtak össze a környezetükkel.
+Számokban: a régi fájlban 54 kitöltendő hely (blank-group) van 47
+bekezdésben, az újban 60 – de az a 60 **maga a 60 jelölő bekezdés**, a
+tényleges kitöltendő helyek száma **nulla**.
+
+Mivel a `blank_groups()` (és rá épülve az egész `fill_blanks()`) pontosan
+ezt az áthúzott formázást használja a kitöltendő helyek megtalálására, a
+sablon lecserélése azt jelentette volna, hogy **mind a 45 meglévő
+behelyettesítés némán, hibaüzenet nélkül elmarad**. Ezért a `merged.docx`
+maradt a generálás alapja, a 2026-os fájl pedig térképként szolgált: a
+jelölések pozícióit `difflib.SequenceMatcher`-rel képeztük vissza a
+`merged.docx` bekezdés-indexeire (2130-ból 2123 bekezdés egyértelműen
+megfeleltethető). Ennek járulékos haszna, hogy **a meglévő 24 kérdés egyetlen
+bekezdés-indexe sem mozdult el**, tehát nem kellett kockázatos tömeges
+átindexelést végezni.
+
+## Tesztek
+
+```bash
+python3 scripts/dev/parity_check.py    # Python <-> JS motor-paritás (kötelező!)
+python3 scripts/dev/content_check.py   # a kimenet tartalmi helyessége
+```
+
+A `parity_check.py` a `generate_policy.py` kimenetét és a böngészőben
+(Playwright/Chromium) futtatott `zip.js + docx.js + resolve.js` kimenetét
+hasonlítja össze **run-szinten**: minden bekezdés minden futásának szövege,
+kiemelése, áthúzása és betűszíne meg kell egyezzen. Ez a rendszer alapvető
+helyességi garanciája – **minden `resolve_*` módosítás után le kell
+futtatni**, és a két motort mindig lépésben kell tartani.
 
 ## Kérdőív a kérdésbank alapján
 
@@ -198,3 +276,19 @@ könnyen átalakítható, a lényeg, hogy a beérkező válaszokból végül egy
   amit a `generate()` egyszer, a legelején olvas ki a dokumentumból. Ez
   szándékos: törlés után a `doc.paragraphs` újraolvasása elcsúsztatná a
   többi indexet.
+- **Ág-választáshoz mindig az `answer(a, kulcs, alapertelmezes)` segédet
+  használd**, ne a nyers `a.get(...)` / `a.kulcs || ...` alakot. Az
+  iroda-oldalon a kitöltetlen select ÜRES SZTRINGKÉNT érkezik, nem hiányzó
+  kulcsként, és a JS `||` erre az alapértelmezést adná, a Python `.get()`
+  viszont az üres sztringet - ez korábban a két motor eltérő kimenetét
+  okozta. Az `answer()` a hiányzó és az üres mezőt egyformán kezeli, és
+  mindkét motorban bitre azonos szemantikájú.
+- Ugyanez a csapda a dátum-segédben: a Python `datetime.date` hibás
+  hónapra/napra kivételt dob, a JS `Date` viszont csendben túlcsordul
+  (2024. 13. hó -> 2025. január). Az `illustrativeDate()` ezért kézzel
+  ellenőrzi ugyanazokat a feltételeket - ne egyszerűsítsd vissza.
+- Egy döntés a sablonban többször is előfordulhat: a "szerződés elszámolási
+  egysége" VAGY-csoport pl. NÉGY helyen szerepel (1374, 1479, 1676, 1885) -
+  mindet ugyanabból a válaszból kell feloldani, különben a dokumentum
+  önmagának mond ellent. Új `resolve_*` írásakor érdemes rágrepelni a
+  sablonra, hogy nincs-e ismétlődés.

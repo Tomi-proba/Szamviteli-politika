@@ -5,6 +5,12 @@
   "penznem_atteres_datum": "2023. január 1.",
   "penznem_egyeb_neve": "",
 
+  "onkoltsegszamitasi_szabalyzat": "van_szabalyzat",
+
+  "szv13": "egyszerusitett_eves_beszamolo",
+  "szv14": "b_valtozat",
+  "szv15": "forgalmi_koltseg_eljarassal",
+
   "van_idegen_nyelvu_beszamolo": "nem",
   "idegen_nyelv": "",
 
@@ -16,6 +22,9 @@
   "fordulonap_nap": "30",
 
   "beszamolo_alairoja": "Szabó Anna cégvezető",
+
+  "letetbehelyezes_hatarido_tipus": "szabalyozott_piac",
+  "penzkezeles_felelos_tipus": "penzkezelesi_szabalyzat_szerint",
 
   "konyvvizsgalat_tipus": "onkentes",
   "konyvvizsgalo_adatai": "Audit Kft., 1051 Budapest, Fő u. 1., kamarai szám: 001234, felelős: Tóth Béla, kamarai szám: 005678, megbízás: 3 év",
@@ -48,6 +57,7 @@
   "kiveteles_nagysag_koltseg_szazalek": "12",
 
   "konyvelo_program": "SAP Business One",
+  "koltsegelszamolas_tipus": "67_elsodleges",
 
   "bizonylat_konyveles_osszhang": "elektronikus, automatikus kontírozással",
 
@@ -75,6 +85,10 @@
   "celtartalek_elteres_szazalek": "20",
 
   "kiegeszito_melleklet_sajatossagok": "eladósodottsági mutató, ROE, ROA",
+
+  "szerzodes_elszamolasi_egyseg": "alkalmazzuk",
+  "ertekpapir_kamatkulonbozet_elhatarolas": "elhataroljuk",
+  "arfolyamveszteseg_halasztott_raforditas": "elszamoljuk",
 
   "ert4_alkalmazza_elhatarolas": "igen",
   "bizomanyi_dij_hatar": "300"

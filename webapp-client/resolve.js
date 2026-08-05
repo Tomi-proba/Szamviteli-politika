@@ -17,7 +17,7 @@ function resolveNyelv(p, a, xmlDoc) {
 }
 
 function resolvePenznem(p, a, xmlDoc) {
-  const tipus = a.penznem_tipus || 'forint';
+  const tipus = answer(a, 'penznem_tipus', 'forint');
   if (tipus === 'forint') {
     keepP(p[616], xmlDoc);
     for (const i of [618, 620, 622, 624, 625, 627, 629, 631]) deleteP(p[i]);
@@ -75,7 +75,7 @@ function resolveAlairo(p, a, xmlDoc) {
 }
 
 function resolveKonyvvizsgalat(p, a, xmlDoc) {
-  const tipus = a.konyvvizsgalat_tipus || 'nincs_kotelezettseg';
+  const tipus = answer(a, 'konyvvizsgalat_tipus', 'nincs_kotelezettseg');
   const adatai = a.konyvvizsgalo_adatai || '';
   const branches = { kotelezo_altalanos: 405, kotelezo_koztartozas_miatt: 409, onkentes: 413 };
   if (tipus === 'nincs_kotelezettseg') {
@@ -88,7 +88,7 @@ function resolveKonyvvizsgalat(p, a, xmlDoc) {
   }
   for (const i of [403, 407, 411]) deleteP(p[i]);
 
-  const fenn = a.fenntarthatosagi_jelentes || 'nem_koteles';
+  const fenn = answer(a, 'fenntarthatosagi_jelentes', 'nem_koteles');
   deleteP(p[415]);
   if (fenn === 'nem_koteles') {
     deleteP(p[417]); deleteP(p[419]); deleteP(p[421]);
@@ -100,7 +100,7 @@ function resolveKonyvvizsgalat(p, a, xmlDoc) {
 }
 
 function resolveErtekelesiFelelos(p, a, xmlDoc) {
-  if (a.ertekeles_felelos_tipus === 'egyedi_delegalas') {
+  if (answer(a, 'ertekeles_felelos_tipus') === 'egyedi_delegalas') {
     fillBlanks(p[338], [a.ertekelesi_delegalas || ''], xmlDoc);
     deleteP(p[334]);
     deleteP(p[336]);
@@ -112,7 +112,7 @@ function resolveErtekelesiFelelos(p, a, xmlDoc) {
 }
 
 function resolveKonyvelesFelelos(p, a, xmlDoc) {
-  const tipus = a.konyveles_felelos_tipus || 'mentesseg_20mft_arbevetel_alatt';
+  const tipus = answer(a, 'konyveles_felelos_tipus', 'mentesseg_20mft_arbevetel_alatt');
   const nev = a.konyveles_felelos_nev_regszam || '';
   if (tipus === 'merlegkepes_konyvelo') {
     fillBlanks(p[313], [nev], xmlDoc);
@@ -148,7 +148,7 @@ function resolveNyilvanossagraHozatal(p, a, xmlDoc) {
 
 function resolveKonszolidacio(p, a, xmlDoc) {
   deleteP(p[844]);
-  const tipus = a.konszolidacio_tipus || 'nem_erintett';
+  const tipus = answer(a, 'konszolidacio_tipus', 'nem_erintett');
   const reszlet = a.konszolidacio_reszletszabalyok || '';
   const branchMap = {
     leany_mentesul_bevonas_alol: [[850], 851],
@@ -171,7 +171,7 @@ function resolveKonszolidacio(p, a, xmlDoc) {
 }
 
 function resolveLeltar(p, a, xmlDoc) {
-  const tipus = a.leltar_felelos_tipus || 'vezetes_vagy_szv_rendert_felelos';
+  const tipus = answer(a, 'leltar_felelos_tipus', 'vezetes_vagy_szv_rendert_felelos');
   if (tipus === 'vezetes_vagy_szv_rendert_felelos') {
     keepP(p[342], xmlDoc); deleteP(p[346]); deleteP(p[350]);
   } else if (tipus === 'eszkoz_forras_felelosok') {
@@ -272,6 +272,158 @@ function resolveCeltartalek(p, a, xmlDoc) {
   deleteP(p[1610]);
 }
 
+function resolveBeszamoloForma(p, a, xmlDoc) {
+  // Szv#13 - IV.2. beszámoló-forma ág + IV.8. kiegészítő melléklet blokk
+  // (lásd a generate_policy.py részletes megjegyzését).
+  const tipus = answer(a, 'szv13');
+  const branches = {
+    eves_beszamolo: 487,
+    egyszerusitett_eves_beszamolo: 490,
+    mikrogazdalkodoi_egyszerusitett_eves_beszamolo: 493,
+  };
+  if (Object.prototype.hasOwnProperty.call(branches, tipus)) {
+    const chosen = branches[tipus];
+    keepP(p[chosen], xmlDoc);
+    for (const i of [487, 490, 493]) if (i !== chosen) deleteP(p[i]);
+    deleteP(p[489]);
+    deleteP(p[492]);
+  } else {
+    flagBefore(p[485],
+      "a beszámoló választott formája nem egyértelmű (pl. IFRS szerinti " +
+      "beszámoló, amihez ez a sablon nem tartalmaz alternatívát) - kérjük " +
+      "kézzel kiválasztani a megfelelő bekezdést, a többit törölni.", xmlDoc);
+  }
+
+  if (tipus === 'eves_beszamolo') {
+    for (let i = 678; i < 774; i++) keepP(p[i], xmlDoc);
+    for (let i = 774; i < 815; i++) deleteP(p[i]);
+  } else if (tipus === 'egyszerusitett_eves_beszamolo') {
+    for (let i = 678; i < 775; i++) deleteP(p[i]);
+    for (let i = 775; i < 815; i++) keepP(p[i], xmlDoc);
+  } else {
+    flagBefore(p[676],
+      "a kiegészítő melléklet tartalmához (éves / egyszerűsített éves " +
+      "beszámoló változat) nincs egyértelmű kérdőív-adat - mikrogazdálkodói " +
+      "beszámolónak egyáltalán nincs kiegészítő melléklete. Kérjük kézzel " +
+      "kiválasztani a megfelelő blokkot, a másikat törölni.", xmlDoc);
+    return;
+  }
+  deleteP(p[676]);
+}
+
+function resolveMerlegForma(p, a, xmlDoc) {
+  const tipus = answer(a, 'szv14');
+  if (tipus === 'a_valtozat') {
+    keepP(p[525], xmlDoc); deleteP(p[527]);
+  } else if (tipus === 'b_valtozat') {
+    keepP(p[527], xmlDoc); deleteP(p[525]);
+  } else {
+    flagBefore(p[524], 'a mérleg választott formája (A/B változat) hiányzik.', xmlDoc);
+    return;
+  }
+  deleteP(p[526]);
+}
+
+function resolveEredmenykimutatasForma(p, a, xmlDoc) {
+  // 531-534 a törvény MINDKÉT eljárást ismertető leírása - nem nyúlunk hozzá.
+  const tipus = answer(a, 'szv15');
+  if (tipus === 'osszkoltseg_eljarassal') {
+    keepP(p[537], xmlDoc); deleteP(p[539]);
+  } else if (tipus === 'forgalmi_koltseg_eljarassal') {
+    keepP(p[539], xmlDoc); deleteP(p[537]);
+  } else {
+    flagBefore(p[536], 'az eredménykimutatás választott formája hiányzik.', xmlDoc);
+    return;
+  }
+  keepP(p[536], xmlDoc);
+  keepP(p[540], xmlDoc);
+  deleteP(p[538]);
+}
+
+function resolveLetetbehelyezes(p, a, xmlDoc) {
+  if (answer(a, 'letetbehelyezes_hatarido_tipus', 'altalanos') === 'altalanos') {
+    keepP(p[427], xmlDoc);
+    deleteP(p[429]);
+    deleteP(p[431]);
+  } else {
+    flagBefore(p[427],
+      "a vállalkozás értékpapírjait EGT-állam szabályozott piacán " +
+      "forgalmazzák, ezért a letétbe helyezés határideje a negyedik hónap " +
+      "utolsó napja - kérjük a bekezdést kézzel összevonni/pontosítani.", xmlDoc);
+  }
+}
+
+function resolvePenzkezelesFelelos(p, a, xmlDoc) {
+  if (answer(a, 'penzkezeles_felelos_tipus', 'vezetes_altal_kijelolt') === 'penzkezelesi_szabalyzat_szerint') {
+    keepP(p[358], xmlDoc); deleteP(p[354]);
+  } else {
+    keepP(p[354], xmlDoc); deleteP(p[358]);
+  }
+  deleteP(p[356]);
+}
+
+function resolveKoltsegelszamolas(p, a, xmlDoc) {
+  const branches = { csak_5: 968, '5_elsodleges': 972, '67_elsodleges': 976 };
+  const tipus = answer(a, 'koltsegelszamolas_tipus', 'csak_5');
+  const chosen = Object.prototype.hasOwnProperty.call(branches, tipus) ? branches[tipus] : 968;
+  keepP(p[chosen], xmlDoc);
+  for (const i of [968, 972, 976]) if (i !== chosen) deleteP(p[i]);
+  deleteP(p[970]);
+  deleteP(p[974]);
+}
+
+function resolveSzerzodesElszamolasiEgyseg(p, a, xmlDoc) {
+  // UGYANAZ a döntés NÉGY helyen szerepel a sablonban (ld. generate_policy.py).
+  const alkalmaz = answer(a, 'szerzodes_elszamolasi_egyseg', 'nem_alkalmazzuk') === 'alkalmazzuk';
+  for (const [lead, igen, sep, nem] of [
+    [1374, 1375, 1376, 1377],
+    [1479, 1480, 1482, 1484],
+    [1676, 1677, 1679, 1681],
+    [1885, 1886, 1887, 1888],
+  ]) {
+    keepP(p[lead], xmlDoc);
+    if (alkalmaz) {
+      keepP(p[igen], xmlDoc); deleteP(p[nem]);
+    } else {
+      keepP(p[nem], xmlDoc); deleteP(p[igen]);
+    }
+    deleteP(p[sep]);
+  }
+}
+
+function resolveErtekpapirElhatarolas(p, a, xmlDoc) {
+  if (answer(a, 'ertekpapir_kamatkulonbozet_elhatarolas', 'nem_hataroljuk_el') === 'elhataroljuk') {
+    keepP(p[1431], xmlDoc); deleteP(p[1435]);
+  } else {
+    keepP(p[1435], xmlDoc); deleteP(p[1431]);
+  }
+  deleteP(p[1433]);
+}
+
+function resolveArfolyamveszteseg(p, a, xmlDoc) {
+  if (answer(a, 'arfolyamveszteseg_halasztott_raforditas', 'nem_szamoljuk_el') === 'elszamoljuk') {
+    keepP(p[1453], xmlDoc);
+    deleteP(p[1455]);
+    deleteP(p[1457]);
+  } else {
+    flagBefore(p[1453],
+      "a vállalkozás NEM számolja el halasztott ráfordításként a devizás " +
+      "hiteltartozások árfolyamveszteségét - a két bekezdést (1453/1457) " +
+      "kérjük kézzel egy mondattá összevonni.", xmlDoc);
+  }
+}
+
+function resolveOnkoltsegszamitas(p, a, xmlDoc) {
+  if (answer(a, 'onkoltsegszamitasi_szabalyzat', 'mentesul') === 'mentesul') {
+    keepP(p[188], xmlDoc);
+  } else {
+    flagBefore(p[188],
+      "a Vállalkozás NEM mentesül az önköltségszámítási szabályzat " +
+      "készítése alól (van/kell önköltségszámítási szabályzata) - az alábbi " +
+      "mentességi bekezdés kézi átírást igényel.", xmlDoc);
+  }
+}
+
 function resolveErt4(p, a, xmlDoc) {
   if (a.ert4_alkalmazza_elhatarolas === 'igen') {
     fillBlanks(p[1494], [a.bizomanyi_dij_hatar || ''], xmlDoc);
@@ -310,6 +462,16 @@ async function generateFromAnswers(templateB64, answers) {
   resolveErtekhelyesbites(p, answers, xmlDoc);
   resolveCeltartalek(p, answers, xmlDoc);
   resolveErt4(p, answers, xmlDoc);
+  resolveBeszamoloForma(p, answers, xmlDoc);
+  resolveMerlegForma(p, answers, xmlDoc);
+  resolveEredmenykimutatasForma(p, answers, xmlDoc);
+  resolveLetetbehelyezes(p, answers, xmlDoc);
+  resolvePenzkezelesFelelos(p, answers, xmlDoc);
+  resolveKoltsegelszamolas(p, answers, xmlDoc);
+  resolveSzerzodesElszamolasiEgyseg(p, answers, xmlDoc);
+  resolveErtekpapirElhatarolas(p, answers, xmlDoc);
+  resolveArfolyamveszteseg(p, answers, xmlDoc);
+  resolveOnkoltsegszamitas(p, answers, xmlDoc);
   removeJeloltInstructions(p);
 
   const newXml = new XMLSerializer().serializeToString(xmlDoc);

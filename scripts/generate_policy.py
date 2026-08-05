@@ -172,6 +172,29 @@ def is_number(value):
         return False
 
 
+def answer(a, key, default=""):
+    """Egy válasz kiolvasása ág-választáshoz.
+
+    A HIÁNYZÓ és az ÜRESEN HAGYOTT mezőt egyaránt "nincs válasz"-ként
+    kezeljük, ilyenkor a megadott alapértelmezést adjuk vissza. Ez azért
+    fontos, mert az iroda-oldalon minden select alapértelmezett értéke az
+    üres "-- válasszon --", tehát a kitöltetlen mező ÜRES SZTRINGKÉNT
+    érkezik, nem hiányzó kulcsként.
+
+    FIGYELEM: a resolve.js `answer()` függvényének PONTOS párja kell legyen.
+    A JS `a.kulcs || alapertelmezes` alak NEM ekvivalens a Python
+    `a.get(kulcs, alapertelmezes)`-szel (az előbbi az üres sztringre is az
+    alapértelmezést adja, az utóbbi nem) - korábban pontosan emiatt tudott a
+    két motor eltérő dokumentumot előállítani ugyanarra a válaszkészletre.
+    """
+    value = a.get(key)
+    if value is None:
+        return default
+    if isinstance(value, str) and value.strip() == "":
+        return default
+    return value
+
+
 # --------------------------------------------------------------------------
 # Fő generálási logika
 # --------------------------------------------------------------------------
@@ -196,7 +219,7 @@ def resolve_nyelv(p, a):
 
 
 def resolve_penznem(p, a):
-    tipus = a.get("penznem_tipus", "forint")
+    tipus = answer(a, "penznem_tipus", "forint")
     if tipus == "forint":
         keep(p[616])
         for i in (618, 620, 622, 624, 625, 627, 629, 631):
@@ -256,7 +279,7 @@ def resolve_alairo(p, a):
 
 
 def resolve_konyvvizsgalat(p, a):
-    tipus = a.get("konyvvizsgalat_tipus", "nincs_kotelezettseg")
+    tipus = answer(a, "konyvvizsgalat_tipus", "nincs_kotelezettseg")
     adatai = a.get("konyvvizsgalo_adatai", "")
     branches = {"kotelezo_altalanos": 405, "kotelezo_koztartozas_miatt": 409, "onkentes": 413}
     if tipus == "nincs_kotelezettseg":
@@ -272,7 +295,7 @@ def resolve_konyvvizsgalat(p, a):
     for i in (403, 407, 411):
         delete(p[i])
 
-    fenn = a.get("fenntarthatosagi_jelentes", "nem_koteles")
+    fenn = answer(a, "fenntarthatosagi_jelentes", "nem_koteles")
     delete(p[415])
     if fenn == "nem_koteles":
         delete(p[417])
@@ -289,7 +312,7 @@ def resolve_konyvvizsgalat(p, a):
 
 
 def resolve_ertekelesi_felelos(p, a):
-    if a.get("ertekeles_felelos_tipus") == "egyedi_delegalas":
+    if answer(a, "ertekeles_felelos_tipus") == "egyedi_delegalas":
         fill_blanks(p[338], [a.get("ertekelesi_delegalas", "")])
         delete(p[334])
         delete(p[336])
@@ -300,7 +323,7 @@ def resolve_ertekelesi_felelos(p, a):
 
 
 def resolve_konyveles_felelos(p, a):
-    tipus = a.get("konyveles_felelos_tipus", "mentesseg_20mft_arbevetel_alatt")
+    tipus = answer(a, "konyveles_felelos_tipus", "mentesseg_20mft_arbevetel_alatt")
     nev = a.get("konyveles_felelos_nev_regszam", "")
     if tipus == "merlegkepes_konyvelo":
         fill_blanks(p[313], [nev])
@@ -341,7 +364,7 @@ def resolve_nyilvanossagra_hozatal(p, a):
 
 def resolve_konszolidacio(p, a):
     delete(p[844])  # "VÁLASZTANI KELL:" - szerkesztői utasítás
-    tipus = a.get("konszolidacio_tipus", "nem_erintett")
+    tipus = answer(a, "konszolidacio_tipus", "nem_erintett")
     reszlet = a.get("konszolidacio_reszletszabalyok", "")
     branch_map = {
         "leany_mentesul_bevonas_alol": ([850], 851),
@@ -369,7 +392,7 @@ def resolve_konszolidacio(p, a):
 
 
 def resolve_leltar(p, a):
-    tipus = a.get("leltar_felelos_tipus", "vezetes_vagy_szv_rendert_felelos")
+    tipus = answer(a, "leltar_felelos_tipus", "vezetes_vagy_szv_rendert_felelos")
     if tipus == "vezetes_vagy_szv_rendert_felelos":
         keep(p[342])
         delete(p[346])
@@ -504,6 +527,215 @@ def resolve_celtartalek(p, a):
     delete(p[1610])
 
 
+def resolve_beszamolo_forma(p, a):
+    """Szv#13 - a beszámoló választott formája.
+
+    Két, ugyanabból a válaszból levezethető döntés:
+      - IV.2. fejezet: 487 = éves, 490 = egyszerűsített éves, 493 =
+        mikrogazdálkodói (489/492 a VAGY elválasztók);
+      - IV.8. fejezet: a kiegészítő melléklet tartalma két teljes,
+        egymást kizáró blokkban van leírva (678-773 = éves beszámoló,
+        775-814 = egyszerűsített éves beszámoló), 676 = "VÁLASZTANI KELL:",
+        774 = VAGY.
+
+    IFRS szerinti beszámolóhoz a sablonnak nincs ága, a mikrogazdálkodói
+    beszámolónak pedig egyáltalán nincs kiegészítő melléklete (398/2012.
+    Korm. r.) - ezekben az esetekben nem tippelünk, hanem jelölünk.
+    """
+    tipus = answer(a, "szv13")
+    branches = {
+        "eves_beszamolo": 487,
+        "egyszerusitett_eves_beszamolo": 490,
+        "mikrogazdalkodoi_egyszerusitett_eves_beszamolo": 493,
+    }
+    if tipus in branches:
+        chosen = branches[tipus]
+        keep(p[chosen])
+        for i in (487, 490, 493):
+            if i != chosen:
+                delete(p[i])
+        delete(p[489])
+        delete(p[492])
+    else:
+        flag_before(
+            p[485],
+            "a beszámoló választott formája nem egyértelmű (pl. IFRS szerinti "
+            "beszámoló, amihez ez a sablon nem tartalmaz alternatívát) - kérjük "
+            "kézzel kiválasztani a megfelelő bekezdést, a többit törölni.",
+        )
+
+    if tipus == "eves_beszamolo":
+        for i in range(678, 774):
+            keep(p[i])
+        for i in range(774, 815):
+            delete(p[i])
+    elif tipus == "egyszerusitett_eves_beszamolo":
+        for i in range(678, 775):
+            delete(p[i])
+        for i in range(775, 815):
+            keep(p[i])
+    else:
+        flag_before(
+            p[676],
+            "a kiegészítő melléklet tartalmához (éves / egyszerűsített éves "
+            "beszámoló változat) nincs egyértelmű kérdőív-adat - mikrogazdálkodói "
+            "beszámolónak egyáltalán nincs kiegészítő melléklete. Kérjük kézzel "
+            "kiválasztani a megfelelő blokkot, a másikat törölni.",
+        )
+        return
+    delete(p[676])
+
+
+def resolve_merleg_forma(p, a):
+    # Szv#14 - 525 = "A" változat, 526 = VAGY, 527 = "B" változat.
+    tipus = answer(a, "szv14")
+    if tipus == "a_valtozat":
+        keep(p[525])
+        delete(p[527])
+    elif tipus == "b_valtozat":
+        keep(p[527])
+        delete(p[525])
+    else:
+        flag_before(p[524], "a mérleg választott formája (A/B változat) hiányzik.")
+        return
+    delete(p[526])
+
+
+def resolve_eredmenykimutatas_forma(p, a):
+    # Szv#15 - 537 = összköltség, 538 = VAGY, 539 = forgalmi költség eljárású.
+    # (531-534 a törvény MINDKÉT eljárást ismertető leírása, ott a "VAGY" a
+    # jogszabályi felsorolás része, nem választási pont - nem nyúlunk hozzá.)
+    tipus = answer(a, "szv15")
+    if tipus == "osszkoltseg_eljarassal":
+        keep(p[537])
+        delete(p[539])
+    elif tipus == "forgalmi_koltseg_eljarassal":
+        keep(p[539])
+        delete(p[537])
+    else:
+        flag_before(p[536], "az eredménykimutatás választott formája hiányzik.")
+        return
+    keep(p[536])
+    keep(p[540])
+    delete(p[538])
+
+
+def resolve_letetbehelyezes(p, a):
+    """Szv#19 - letétbe helyezési határidő. 427 = általános (ötödik hónap),
+    429 = VAGY, 431 = szabályozott piacra bevezetett értékpapír esetén
+    (negyedik hónap). A 431 csak egy közbeszúrt feltételes tagmondat: a
+    mondat alanya és állítmánya a 427-ben, illetve a 433-ban van, ezért ha a
+    szabályozott piaci ág kell, azt nem lehet gépi bekezdés-törléssel
+    előállítani - ilyenkor jelölünk."""
+    if answer(a, "letetbehelyezes_hatarido_tipus", "altalanos") == "altalanos":
+        keep(p[427])
+        delete(p[429])
+        delete(p[431])
+    else:
+        flag_before(
+            p[427],
+            "a vállalkozás értékpapírjait EGT-állam szabályozott piacán "
+            "forgalmazzák, ezért a letétbe helyezés határideje a negyedik hónap "
+            "utolsó napja - kérjük a bekezdést kézzel összevonni/pontosítani.",
+        )
+
+
+def resolve_penzkezeles_felelos(p, a):
+    # Szv#37 - 354 = vezetés által írásban kijelölt személyek, 356 = VAGY,
+    # 358 = a pénzkezelési szabályzatban megjelölt személyek.
+    if answer(a, "penzkezeles_felelos_tipus", "vezetes_altal_kijelolt") == "penzkezelesi_szabalyzat_szerint":
+        keep(p[358])
+        delete(p[354])
+    else:
+        keep(p[354])
+        delete(p[358])
+    delete(p[356])
+
+
+def resolve_koltsegelszamolas(p, a):
+    # Szv#45 - 968 = csak 5. számlaosztály, 972 = 5. elsődleges + 6-7.
+    # másodlagos, 976 = 6-7. elsődleges + 5. másodlagos (970/974 = VAGY).
+    branches = {"csak_5": 968, "5_elsodleges": 972, "67_elsodleges": 976}
+    chosen = branches.get(answer(a, "koltsegelszamolas_tipus", "csak_5"), 968)
+    keep(p[chosen])
+    for i in (968, 972, 976):
+        if i != chosen:
+            delete(p[i])
+    delete(p[970])
+    delete(p[974])
+
+
+def resolve_szerzodes_elszamolasi_egyseg(p, a):
+    """Szv#83 - a nagy tömegben, sorozatban gyártott termékekre alkalmazzák-e
+    a szerződés elszámolási egységére vonatkozó szabályrendszert.
+
+    UGYANAZ a döntés NÉGY helyen szerepel a sablonban (készletek, aktív
+    időbeli elhatárolás, passzív időbeli elhatárolás, értékesítés nettó
+    árbevétele fejezetek) - mind a négyet ugyanabból a válaszból oldjuk fel,
+    különben a dokumentum önmagának mondana ellent."""
+    alkalmaz = answer(a, "szerzodes_elszamolasi_egyseg", "nem_alkalmazzuk") == "alkalmazzuk"
+    for lead, igen, sep, nem in (
+        (1374, 1375, 1376, 1377),
+        (1479, 1480, 1482, 1484),
+        (1676, 1677, 1679, 1681),
+        (1885, 1886, 1887, 1888),
+    ):
+        keep(p[lead])
+        if alkalmaz:
+            keep(p[igen])
+            delete(p[nem])
+        else:
+            keep(p[nem])
+            delete(p[igen])
+        delete(p[sep])
+
+
+def resolve_ertekpapir_elhatarolas(p, a):
+    # Szv#94 - 1431 = elhatároljuk, 1433 = VAGY, 1435 = nem határoljuk el.
+    if answer(a, "ertekpapir_kamatkulonbozet_elhatarolas", "nem_hataroljuk_el") == "elhataroljuk":
+        keep(p[1431])
+        delete(p[1435])
+    else:
+        keep(p[1435])
+        delete(p[1431])
+    delete(p[1433])
+
+
+def resolve_arfolyamveszteseg(p, a):
+    """Szv#95 / Ért#5 - a devizakészlettel nem fedezett hiteltartozások
+    árfolyamveszteségét halasztott ráfordításként elszámolják-e. 1453 = igen
+    (teljes mondat), 1455 = VAGY, 1457 = "nem számoljuk el halasztott
+    ráfordításként." - ez utóbbi csak mondatvég, az alany a 1453-ban van,
+    ezért a "nem" ágat nem lehet bekezdés-törléssel előállítani."""
+    if answer(a, "arfolyamveszteseg_halasztott_raforditas", "nem_szamoljuk_el") == "elszamoljuk":
+        keep(p[1453])
+        delete(p[1455])
+        delete(p[1457])
+    else:
+        flag_before(
+            p[1453],
+            "a vállalkozás NEM számolja el halasztott ráfordításként a devizás "
+            "hiteltartozások árfolyamveszteségét - a két bekezdést (1453/1457) "
+            "kérjük kézzel egy mondattá összevonni.",
+        )
+
+
+def resolve_onkoltsegszamitas(p, a):
+    """Szv#106 - a 188. bekezdés kijelenti, hogy a Vállalkozás mentesül az
+    önköltségszámítási szabályzat készítése alól. Ha ez nem igaz, a sablonban
+    nincs alternatív szöveg, ezért jelölünk - ez a mondat így, ellenőrzés
+    nélkül nem mehet ki az ügyfélhez."""
+    if answer(a, "onkoltsegszamitasi_szabalyzat", "mentesul") == "mentesul":
+        keep(p[188])
+    else:
+        flag_before(
+            p[188],
+            "a Vállalkozás NEM mentesül az önköltségszámítási szabályzat "
+            "készítése alól (van/kell önköltségszámítási szabályzata) - az alábbi "
+            "mentességi bekezdés kézi átírást igényel.",
+        )
+
+
 def resolve_ert4(p, a):
     if a.get("ert4_alkalmazza_elhatarolas") == "igen":
         fill_blanks(p[1494], [a.get("bizomanyi_dij_hatar", "")])
@@ -546,6 +778,16 @@ def generate(answers_path, output_path):
     resolve_ertekhelyesbites(p, answers)
     resolve_celtartalek(p, answers)
     resolve_ert4(p, answers)
+    resolve_beszamolo_forma(p, answers)
+    resolve_merleg_forma(p, answers)
+    resolve_eredmenykimutatas_forma(p, answers)
+    resolve_letetbehelyezes(p, answers)
+    resolve_penzkezeles_felelos(p, answers)
+    resolve_koltsegelszamolas(p, answers)
+    resolve_szerzodes_elszamolasi_egyseg(p, answers)
+    resolve_ertekpapir_elhatarolas(p, answers)
+    resolve_arfolyamveszteseg(p, answers)
+    resolve_onkoltsegszamitas(p, answers)
     remove_jelolt_instructions(p)
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)

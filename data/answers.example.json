@@ -5,6 +5,12 @@
   "penznem_atteres_datum": "",
   "penznem_egyeb_neve": "",
 
+  "onkoltsegszamitasi_szabalyzat": "mentesul",
+
+  "szv13": "eves_beszamolo",
+  "szv14": "a_valtozat",
+  "szv15": "osszkoltseg_eljarassal",
+
   "van_idegen_nyelvu_beszamolo": "igen",
   "idegen_nyelv": "angol",
 
@@ -16,6 +22,9 @@
   "fordulonap_nap": "31",
 
   "beszamolo_alairoja": "Kovács János ügyvezető",
+
+  "letetbehelyezes_hatarido_tipus": "altalanos",
+  "penzkezeles_felelos_tipus": "vezetes_altal_kijelolt",
 
   "konyvvizsgalat_tipus": "nincs_kotelezettseg",
   "konyvvizsgalo_adatai": "",
@@ -48,6 +57,7 @@
   "kiveteles_nagysag_koltseg_szazalek": "10",
 
   "konyvelo_program": "KulcsSoft Számla és Könyvelő Program",
+  "koltsegelszamolas_tipus": "csak_5",
 
   "bizonylat_konyveles_osszhang": "a bizonylatok kontírozással, a könyvelőprogramban rögzített hivatkozási számmal kapcsolódnak a könyvviteli számlákhoz",
 
@@ -75,6 +85,10 @@
   "celtartalek_elteres_szazalek": "",
 
   "kiegeszito_melleklet_sajatossagok": "likviditási gyorsráta, saját tőke aránya, eszközök megtérülési mutatói",
+
+  "szerzodes_elszamolasi_egyseg": "nem_alkalmazzuk",
+  "ertekpapir_kamatkulonbozet_elhatarolas": "nem_hataroljuk_el",
+  "arfolyamveszteseg_halasztott_raforditas": "nem_szamoljuk_el",
 
   "ert4_alkalmazza_elhatarolas": "nem",
   "bizomanyi_dij_hatar": ""

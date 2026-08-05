@@ -138,8 +138,7 @@
         "egyszerusitett_eves_beszamolo",
         "mikrogazdalkodoi_egyszerusitett_eves_beszamolo",
         "eves_beszamolo_ifrs_szerint"
-      ],
-      "_nincs_sablonhely": true
+      ]
     },
     {
       "kulcs": "szv14",
@@ -150,8 +149,7 @@
       "opciok": [
         "a_valtozat",
         "b_valtozat"
-      ],
-      "_nincs_sablonhely": true
+      ]
     },
     {
       "kulcs": "szv15",
@@ -162,8 +160,7 @@
       "opciok": [
         "osszkoltseg_eljarassal",
         "forgalmi_koltseg_eljarassal"
-      ],
-      "_nincs_sablonhely": true
+      ]
     },
     {
       "kulcs": "van_idegen_nyelvu_beszamolo",
@@ -239,6 +236,17 @@
       "kerdes": "A beszámoló letétbe helyezésének határideje?",
       "tipus": "text",
       "_nincs_sablonhely": true
+    },
+    {
+      "kulcs": "letetbehelyezes_hatarido_tipus",
+      "forras": "iroda",
+      "eredeti": "Szv#19",
+      "kerdes": "A letétbe helyezés határideje az általános (mérlegfordulónapot követő ötödik hónap utolsó napja), vagy a vállalkozás értékpapírjait EGT-állam szabályozott piacán forgalmazzák (negyedik hónap utolsó napja)?",
+      "tipus": "select",
+      "opciok": [
+        "altalanos",
+        "szabalyozott_piac"
+      ]
     },
     {
       "kulcs": "szv20",
@@ -492,6 +500,17 @@
       "_nincs_sablonhely": true
     },
     {
+      "kulcs": "penzkezeles_felelos_tipus",
+      "forras": "iroda",
+      "eredeti": "Szv#37",
+      "kerdes": "A pénzkezelést a vezetés által írásban kijelölt személyek végzik, vagy a pénzkezelési szabályzatban megjelölt személyek?",
+      "tipus": "select",
+      "opciok": [
+        "vezetes_altal_kijelolt",
+        "penzkezelesi_szabalyzat_szerint"
+      ]
+    },
+    {
       "kulcs": "szv38",
       "forras": "ugyfel",
       "eredeti": "Szv#38",
@@ -582,6 +601,18 @@
         "6_7_szamlaosztaly_is"
       ],
       "_nincs_sablonhely": true
+    },
+    {
+      "kulcs": "koltsegelszamolas_tipus",
+      "forras": "iroda",
+      "eredeti": "Szv#45",
+      "kerdes": "A költségelszámolás választott módja a sablon szerint: csak az 5. számlaosztályban; elsődlegesen 5., másodlagosan 6-7.; vagy elsődlegesen 6-7., másodlagosan 5. számlaosztályban?",
+      "tipus": "select",
+      "opciok": [
+        "csak_5",
+        "5_elsodleges",
+        "67_elsodleges"
+      ]
     },
     {
       "kulcs": "szv46",
@@ -1004,6 +1035,17 @@
       "_nincs_sablonhely": true
     },
     {
+      "kulcs": "szerzodes_elszamolasi_egyseg",
+      "forras": "iroda",
+      "eredeti": "Szv#83",
+      "kerdes": "A nagy tömegben, sorozatban előállított termékek esetében alkalmazzák a szerződés elszámolási egységére vonatkozó szabályrendszert?",
+      "tipus": "select",
+      "opciok": [
+        "alkalmazzuk",
+        "nem_alkalmazzuk"
+      ]
+    },
+    {
       "kulcs": "szv84",
       "forras": "ugyfel",
       "eredeti": "Szv#84",
@@ -1092,12 +1134,34 @@
       "_nincs_sablonhely": true
     },
     {
+      "kulcs": "ertekpapir_kamatkulonbozet_elhatarolas",
+      "forras": "iroda",
+      "eredeti": "Szv#94",
+      "kerdes": "A befektetett pénzügyi eszközök közé sorolt, névérték alatt beszerzett kamatozó értékpapír névérték és beszerzési érték közötti nyereségjellegű különbözetét aktív időbeli elhatárolásként kimutatják?",
+      "tipus": "select",
+      "opciok": [
+        "elhataroljuk",
+        "nem_hataroljuk_el"
+      ]
+    },
+    {
       "kulcs": "szv95",
       "forras": "ugyfel",
       "eredeti": "Szv#95",
       "kerdes": "A devizaszámlán meglévő devizakészlettel nem fedezett, külföldi pénzértékre szóló hiteltartozások, devizakötvény-kibocsátásból származó tartozások esetén a tárgyévben, a mérlegfordulónapi értékelésből keletkezett, árfolyamnyereséggel nem ellentételezett árfolyamveszteséget halasztott ráfordításként elszámolják?",
       "tipus": "text",
       "_nincs_sablonhely": true
+    },
+    {
+      "kulcs": "arfolyamveszteseg_halasztott_raforditas",
+      "forras": "iroda",
+      "eredeti": "Szv#95",
+      "kerdes": "A devizakészlettel nem fedezett, külföldi pénzértékre szóló hiteltartozások mérlegfordulónapi értékeléséből keletkezett árfolyamveszteséget halasztott ráfordításként elszámolják?",
+      "tipus": "select",
+      "opciok": [
+        "elszamoljuk",
+        "nem_szamoljuk_el"
+      ]
     },
     {
       "kulcs": "celtartalek_kepez",
@@ -1212,6 +1276,17 @@
       "kerdes": "Rendelkezik a Társaság önköltségszámítási szabályzattal?",
       "tipus": "text",
       "_nincs_sablonhely": true
+    },
+    {
+      "kulcs": "onkoltsegszamitasi_szabalyzat",
+      "forras": "iroda",
+      "eredeti": "Szv#106",
+      "kerdes": "Mentesül a Vállalkozás az önköltségszámítási szabályzat készítése alól (a Számviteli törvény szerinti küszöbértékek alatt marad)?",
+      "tipus": "select",
+      "opciok": [
+        "mentesul",
+        "van_szabalyzat"
+      ]
     },
     {
       "kulcs": "szv107",

@@ -177,9 +177,19 @@ const MONTHS = {
 
 function monthNum(value) {
   const s = String(value).trim().toLowerCase();
-  if (MONTHS[s]) return MONTHS[s];
+  if (Object.prototype.hasOwnProperty.call(MONTHS, s)) return MONTHS[s];
   const m = s.match(/\d+/);
   return m ? parseInt(m[0], 10) : 12;
+}
+
+// A Python int(str) pontos tükörképe: csak egész szám fogadható el (nem
+// "13.5", nem "abc"), opcionális előjellel és külső szóközökkel. Hibás
+// bemenetre null - a Python ilyenkor ValueError-t dob.
+function strictInt(value) {
+  if (typeof value === 'number') return Number.isInteger(value) ? value : null;
+  const s = String(value).trim();
+  if (!/^[+-]?\d+$/.test(s)) return null;
+  return parseInt(s, 10);
 }
 
 function isNumber(value) {
@@ -188,12 +198,39 @@ function isNumber(value) {
   return !Number.isNaN(n);
 }
 
+// A generate_policy.py answer() függvényének PONTOS párja: a hiányzó és az
+// üresen hagyott mezőt egyaránt "nincs válasz"-ként kezeli. NE cseréljük
+// vissza `a.kulcs || alapertelmezes` alakra - az üres sztringre az másképp
+// viselkedne, mint a Python `a.get(kulcs, alapertelmezes)`, és a két motor
+// kimenete eltérne (az iroda-oldalon minden kitöltetlen select ÜRES sztring).
+function answer(a, key, def_) {
+  const fallback = def_ === undefined ? '' : def_;
+  const value = a[key];
+  if (value === undefined || value === null) return fallback;
+  if (typeof value === 'string' && value.trim() === '') return fallback;
+  return value;
+}
+
 function illustrativeDate(fordulonapHonap, fordulonapNap, offsetDays) {
-  try {
-    const base = new Date(2024, monthNum(fordulonapHonap) - 1, parseInt(fordulonapNap, 10));
-    base.setDate(base.getDate() + parseInt(offsetDays || 0, 10));
-    return [base.getMonth() + 1, base.getDate()];
-  } catch (e) {
+  // A generate_policy.py illustrative_date() PONTOS tükörképe. Fontos: a
+  // Python datetime.date szigorúan validál (hónap 1-12, a hónapban létező
+  // nap), és hibás értékre kivételt dob -> "…". A JS Date ezzel szemben
+  // csendben túlcsordul (2024. 13. hó -> 2025. január), ezért ugyanezeket a
+  // feltételeket itt kézzel kell ellenőrizni, különben a két motor hibásan
+  // kitöltött kérdőívre ELTÉRŐ dokumentumot adna.
+  const m = monthNum(fordulonapHonap);
+  const d = strictInt(fordulonapNap);
+  const off = strictInt(offsetDays === '' || offsetDays == null ? 0 : offsetDays);
+  if (d === null || off === null) return ['…', '…'];
+  if (m < 1 || m > 12 || d < 1 || d > 31) return ['…', '…'];
+  const base = new Date(2024, m - 1, d);
+  if (base.getFullYear() !== 2024 || base.getMonth() !== m - 1 || base.getDate() !== d) {
+    return ['…', '…'];  // pl. február 30. - a Python is ValueError-t dobna
+  }
+  base.setDate(base.getDate() + off);
+  // A Python date-tartománya 1..9999 év; azon kívül OverflowError -> "…".
+  if (!Number.isFinite(base.getTime()) || base.getFullYear() < 1 || base.getFullYear() > 9999) {
     return ['…', '…'];
   }
+  return [base.getMonth() + 1, base.getDate()];
 }
