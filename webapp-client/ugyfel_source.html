@@ -127,6 +127,39 @@
   .btn-secondary { background: transparent; color: var(--accent-ink); border: 1px solid var(--accent) !important; }
   .btn-secondary:hover { background: var(--accent-soft); }
 
+  .field.missing input, .field.missing select {
+    border-color: var(--flag); box-shadow: 0 0 0 2px var(--flag-soft);
+  }
+  .field.missing label { color: var(--flag); }
+  .missing-note {
+    margin: 0.3rem 0 0; font-size: 0.8rem; font-weight: 600; color: var(--flag);
+  }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(20, 24, 21, 0.5); display: flex;
+    align-items: center; justify-content: center; padding: 1.5rem; z-index: 20;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-card {
+    max-width: 480px; width: 100%; max-height: 80vh; overflow-y: auto;
+    background: var(--paper-raised); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: var(--shadow); padding: 1.8rem 1.8rem 1.6rem;
+  }
+  .modal-card h2 { font-family: var(--serif); font-weight: 400; font-size: 1.25rem; margin: 0 0 0.6rem; }
+  .modal-card p { color: var(--ink-muted); font-size: 0.9rem; margin: 0 0 0.9rem; }
+  .modal-list {
+    list-style: none; margin: 0 0 1.2rem; padding: 0; border-top: 1px solid var(--line);
+  }
+  .modal-list li {
+    padding: 0.55rem 0; border-bottom: 1px solid var(--line); font-size: 0.88rem;
+  }
+  .modal-list .q-num { font-family: var(--mono); color: var(--flag); margin-right: 0.4rem; }
+  .modal-actions { display: flex; gap: 0.7rem; flex-wrap: wrap; justify-content: flex-end; }
+  .modal-actions button {
+    font-family: var(--sans); font-weight: 600; font-size: 0.9rem; border-radius: 7px;
+    padding: 0.65rem 1.2rem; cursor: pointer; border: none;
+  }
+
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -163,6 +196,18 @@
         <a href="#" class="btn-primary" id="mailtoBtn">Küldés e-mailben</a>
         <button type="button" class="btn-secondary" id="copyBtn">Kód másolása</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h2>Néhány kérdésre nem válaszolt</h2>
+    <p id="modalIntro"></p>
+    <ul class="modal-list" id="modalList"></ul>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="modalGoBack">Vissza, kitöltöm</button>
+      <button type="button" class="btn-primary" id="modalContinue">Mégis folytatom</button>
     </div>
   </div>
 </div>
@@ -278,8 +323,65 @@ function collectAnswers() {
 // gombba, írd ide (üresen hagyva a mező kitöltése az ügyfélre marad):
 const OFFICE_EMAIL = "";
 
-document.getElementById("policyForm").addEventListener("submit", (ev) => {
-  ev.preventDefault();
+/* ====================== KIHAGYOTT KÉRDÉSEK ELLENŐRZÉSE ====================== */
+function fieldOf(q) {
+  const el = document.querySelector(`[name="${q.kulcs}"]`);
+  return el ? el.closest(".field") : null;
+}
+
+// Csak a ténylegesen látható (nem feltételes rejtéssel eltüntetett) mezőket
+// nézi - egy feltételtől függő, jelenleg nem alkalmazandó kérdés nem számít
+// "kihagyottnak".
+function visibleEmptyQuestions() {
+  const missing = [];
+  for (const q of QUESTIONS) {
+    const el = document.querySelector(`[name="${q.kulcs}"]`);
+    const field = fieldOf(q);
+    if (!el || !field || field.classList.contains("hidden")) continue;
+    if (!el.value || !el.value.trim()) missing.push(q);
+  }
+  return missing;
+}
+
+function clearMissingMarks() {
+  document.querySelectorAll(".field.missing").forEach(f => {
+    f.classList.remove("missing");
+    const note = f.querySelector(".missing-note");
+    if (note) note.remove();
+  });
+}
+
+function markMissing(questions) {
+  questions.forEach(q => {
+    const field = fieldOf(q);
+    if (!field) return;
+    field.classList.add("missing");
+    if (!field.querySelector(".missing-note")) {
+      field.insertAdjacentHTML("beforeend", `<p class="missing-note">Erre a kérdésre nem válaszolt.</p>`);
+    }
+  });
+}
+
+let pendingMissing = [];
+
+function showConfirmModal(missing) {
+  pendingMissing = missing;
+  document.getElementById("modalIntro").textContent =
+    missing.length === 1
+      ? "1 kérdésre nem érkezett válasz. Biztosan folytatja, vagy visszalép és kitölti?"
+      : `${missing.length} kérdésre nem érkezett válasz. Biztosan folytatja, vagy visszalép és kitölti?`;
+  document.getElementById("modalList").innerHTML = missing
+    .map(q => `<li><span class="q-num">${q.eredeti}</span>${q.kerdes}</li>`)
+    .join("");
+  document.getElementById("confirmModal").classList.remove("hidden");
+}
+
+function hideConfirmModal() {
+  document.getElementById("confirmModal").classList.add("hidden");
+}
+
+function finalizeSubmit() {
+  clearMissingMarks();
   const answers = collectAnswers();
   const code = encodeAnswersCode(answers);
   document.getElementById("codeBox").value = code;
@@ -293,6 +395,47 @@ document.getElementById("policyForm").addEventListener("submit", (ev) => {
   document.getElementById("policyForm").style.display = "none";
   document.getElementById("done").classList.add("show");
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.getElementById("policyForm").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const missing = visibleEmptyQuestions();
+  if (missing.length > 0) {
+    showConfirmModal(missing);
+    return;
+  }
+  finalizeSubmit();
+});
+
+document.getElementById("modalContinue").addEventListener("click", () => {
+  hideConfirmModal();
+  finalizeSubmit();
+});
+
+document.getElementById("modalGoBack").addEventListener("click", () => {
+  hideConfirmModal();
+  clearMissingMarks();
+  markMissing(pendingMissing);
+  const first = fieldOf(pendingMissing[0]);
+  if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+// amint a látogató kitölt egy pirossal jelölt mezőt, a jelölés eltűnik róla
+document.addEventListener("input", (ev) => {
+  const field = ev.target.closest && ev.target.closest(".field.missing");
+  if (field && ev.target.value && ev.target.value.trim()) {
+    field.classList.remove("missing");
+    const note = field.querySelector(".missing-note");
+    if (note) note.remove();
+  }
+});
+document.addEventListener("change", (ev) => {
+  const field = ev.target.closest && ev.target.closest(".field.missing");
+  if (field && ev.target.value && ev.target.value.trim()) {
+    field.classList.remove("missing");
+    const note = field.querySelector(".missing-note");
+    if (note) note.remove();
+  }
 });
 
 document.getElementById("copyBtn").addEventListener("click", async () => {
