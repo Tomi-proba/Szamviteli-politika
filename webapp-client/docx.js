@@ -13,6 +13,34 @@ function getRuns(p) {
   return Array.from(p.children).filter(el => el.localName === 'r');
 }
 
+// --- táblázat-hozzáférés (a generate_policy.py table_rows()/row_cells()/
+// cell_paragraph() függvényeinek PONTOS párja) ---
+//
+// A python-docx `doc.tables` a törzs közvetlen w:tbl gyerekeit adja, ezért
+// itt is csak azokat vesszük. A sorokat/cellákat szándékosan a NYERS
+// w:tr / w:tc gyerekekből indexeljük, nem a python-docx rács-nézetéből: az
+// a vízszintesen összevont (gridSpan) cellákat többször is felsorolná, és a
+// két motor cellaindexei elcsúsznának egymástól.
+
+function getTables(xmlDoc) {
+  const body = xmlDoc.getElementsByTagNameNS(W_NS, 'body')[0];
+  return Array.from(body.children).filter(el => el.localName === 'tbl');
+}
+
+function getRows(tbl) {
+  return Array.from(tbl.children).filter(el => el.localName === 'tr');
+}
+
+function getCells(tr) {
+  return Array.from(tr.children).filter(el => el.localName === 'tc');
+}
+
+function cellParagraph(tbl, rowIdx, cellIdx, paraIdx) {
+  const tc = getCells(getRows(tbl)[rowIdx])[cellIdx];
+  const ps = Array.from(tc.children).filter(el => el.localName === 'p');
+  return ps[paraIdx || 0];
+}
+
 function getRPr(r) {
   return Array.from(r.children).find(el => el.localName === 'rPr') || null;
 }
@@ -29,6 +57,18 @@ function ensureRPr(r, xmlDoc) {
 function getRunText(r) {
   const ts = Array.from(r.getElementsByTagNameNS(W_NS, 't'));
   return ts.map(t => t.textContent).join('');
+}
+
+// A generate_policy.py text_value() függvényének PONTOS párja - ld. ott a
+// részletes magyarázatot. Röviden: a Python str() és a JS String() nem
+// ekvivalens minden típusra (str(20.0)="20.0" vs String(20.0)="20",
+// str(True)="True" vs String(true)="true"), ezért a behelyettesítendő
+// értékeket MINDIG ezen keresztül kell szöveggé alakítani, hogy a két motor
+// ugyanazt a dokumentumot adja.
+function textValue(value) {
+  if (value === undefined || value === null) return '';
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  return String(value);
 }
 
 function setRunText(r, text, xmlDoc) {
@@ -131,7 +171,7 @@ function fillBlanks(p, values, xmlDoc) {
   const markedIndices = new Set();
   groups.forEach((grp, gi) => {
     const val = values[gi];
-    setRunText(runs[grp[0]], val == null ? '' : val, xmlDoc);
+    setRunText(runs[grp[0]], textValue(val), xmlDoc);
     markSubstituted(runs[grp[0]], xmlDoc);
     markedIndices.add(grp[0]);
     for (let k = 1; k < grp.length; k++) setRunText(runs[grp[k]], '', xmlDoc);
@@ -147,6 +187,44 @@ function keepP(p, xmlDoc) {
 
 function deleteP(p) {
   if (p.parentNode) p.parentNode.removeChild(p);
+}
+
+// A generate_policy.py fill_cell() PONTOS párja: a sablon táblázataiban
+// egyetlen áthúzott "kitöltendő hely" futás sincs, ezért itt nem a
+// blankGroups()-ra építünk, hanem a cella első futását írjuk felül (üres
+// cellába új futást hozunk létre), és ugyanazzal a jelöléssel hagyjuk, mint
+// a törzsben.
+function fillCell(p, value, xmlDoc) {
+  const text = textValue(value);
+  const runs = getRuns(p);
+  if (runs.length) {
+    setRunText(runs[0], text, xmlDoc);
+    markSubstituted(runs[0], xmlDoc);
+    for (let i = 1; i < runs.length; i++) setRunText(runs[i], '', xmlDoc);
+    clearChoiceMarks(p, new Set([0]));
+  } else {
+    const r = xmlDoc.createElementNS(W_NS, 'w:r');
+    const t = xmlDoc.createElementNS(W_NS, 'w:t');
+    t.setAttribute('xml:space', 'preserve');
+    t.textContent = text;
+    r.appendChild(t);
+    p.appendChild(r);
+    markSubstituted(r, xmlDoc);
+  }
+}
+
+// A generate_policy.py delete_table() párja.
+function deleteTable(tbl) {
+  if (tbl.parentNode) tbl.parentNode.removeChild(tbl);
+}
+
+// A generate_policy.py clone_row() párja: a sor másolatát közvetlenül az
+// eredeti után szúrja be.
+function cloneRow(tbl, rowIdx) {
+  const tr = getRows(tbl)[rowIdx];
+  const newTr = tr.cloneNode(true);
+  tr.parentNode.insertBefore(newTr, tr.nextSibling);
+  return newTr;
 }
 
 function flagBefore(p, note, xmlDoc) {

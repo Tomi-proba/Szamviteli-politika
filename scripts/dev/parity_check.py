@@ -22,6 +22,8 @@ BASE = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BASE / "scripts"))
 
 import docx  # noqa: E402
+from docx.table import _Cell  # noqa: E402
+
 import generate_policy  # noqa: E402
 
 CLIENT = BASE / "webapp-client"
@@ -64,18 +66,35 @@ def js_generate(answers_path, out_path):
     Path(runner).unlink()
 
 
+def _run_props(r):
+    color = None
+    if r.font.color is not None and r.font.color.type is not None:
+        color = str(r.font.color.rgb)
+    return (r.text, str(r.font.highlight_color), str(r.font.strike), color)
+
+
 def run_fingerprint(path):
-    """Minden bekezdés minden futásának (szöveg, kiemelés, áthúzás, szín)
-    négyese - ez a paritás-összehasonlítás alapja."""
+    """Minden futás (szöveg, kiemelés, áthúzás, szín) négyese - ez a
+    paritás-összehasonlítás alapja.
+
+    A törzs bekezdésein TÚL a táblázatok celláit is bejárja: a táblázatokat
+    a python-docx doc.paragraphs egyáltalán nem tartalmazza, így a
+    táblázat-kitöltő resolve_* függvények eltérései e nélkül némán
+    átcsúsznának a paritás-ellenőrzésen. A táblázat/sor/cella/bekezdés
+    indexek is bekerülnek a lenyomatba, ezért egy törölt táblázat, egy
+    duplikált sor vagy egy elcsúszott cella is azonnal eltérésként jelenik
+    meg."""
     doc = docx.Document(str(path))
     out = []
     for pi, p in enumerate(doc.paragraphs):
         for ri, r in enumerate(p.runs):
-            color = None
-            if r.font.color is not None and r.font.color.type is not None:
-                color = str(r.font.color.rgb)
-            out.append((pi, ri, r.text,
-                        str(r.font.highlight_color), str(r.font.strike), color))
+            out.append(("p", pi, ri) + _run_props(r))
+    for ti, tbl in enumerate(doc.tables):
+        for ri, tr in enumerate(generate_policy.table_rows(tbl)):
+            for ci, tc in enumerate(generate_policy.row_cells(tr)):
+                for pi, p in enumerate(_Cell(tc, tbl).paragraphs):
+                    for xi, r in enumerate(p.runs):
+                        out.append(("t", ti, ri, ci, pi, xi) + _run_props(r))
     return out
 
 
@@ -86,8 +105,9 @@ def compare(answers_path):
     js_generate(answers_path, js_out)
     a, b = run_fingerprint(py_out), run_fingerprint(js_out)
     if a == b:
+        d = docx.Document(str(py_out))
         print(f"  OK  {Path(answers_path).name}: {len(a)} run egyezik "
-              f"({len(docx.Document(str(py_out)).paragraphs)} bekezdés)")
+              f"({len(d.paragraphs)} bekezdés, {len(d.tables)} táblázat)")
         return True
     print(f"  ELTÉRÉS {Path(answers_path).name}: py={len(a)} js={len(b)} run")
     for i in range(max(len(a), len(b))):

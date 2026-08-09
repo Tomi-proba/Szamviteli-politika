@@ -32,7 +32,9 @@ from pathlib import Path
 
 import docx
 from docx.enum.text import WD_COLOR_INDEX
+from docx.oxml.ns import qn
 from docx.shared import RGBColor
+from docx.table import _Cell
 
 BASE = Path(__file__).resolve().parent.parent
 TEMPLATE = BASE / "sablon" / "merged.docx"
@@ -104,7 +106,7 @@ def fill_blanks(paragraph, values):
     marked_indices = set()
     for grp, val in zip(groups, values):
         first = paragraph.runs[grp[0]]
-        first.text = "" if val is None else str(val)
+        first.text = text_value(val)
         mark_substituted(first)
         marked_indices.add(grp[0])
         for j in grp[1:]:
@@ -132,6 +134,86 @@ def flag_before(paragraph, note):
     run = new_p.add_run(f"⚠ ELLENŐRIZENDŐ (nincs kérdőív-adat): {note}")
     run.bold = True
     run.font.color.rgb = docx.shared.RGBColor(0xC0, 0x00, 0x00)
+
+
+# --------------------------------------------------------------------------
+# Táblázat-szintű segédfüggvények
+#
+# A motor sokáig KIZÁRÓLAG a törzs közvetlen bekezdéseivel dolgozott
+# (doc.paragraphs), a táblázatok tartalmát sem a Python, sem a JS oldal nem
+# látta. Az alábbi néhány primitív nyitja meg a táblázatcellákat - a
+# webapp-client/docx.js getTables()/getRows()/getCells()/cellParagraph()
+# függvényeinek PONTOS párjai, ezért a bejárási szabályuknak bitre egyeznie
+# kell a két motorban.
+#
+# FONTOS: szándékosan a NYERS w:tr / w:tc gyerekeket járjuk be, és NEM a
+# python-docx `table.rows[i].cells[j]` rácsát. A python-docx a vízszintesen
+# összevont (gridSpan) cellákat a rácsban többször is felsorolja - pl. a
+# sablon 5. táblázatának fejlécsora fizikailag 3 db w:tc, a rácsban viszont
+# 4 cella -, a JS oldal viszont csak a nyers XML-gyerekeket látja. Ha a két
+# motor máshogy indexelné a cellákat, ugyanaz a resolve_* MÁS cellába írna.
+# --------------------------------------------------------------------------
+
+def table_rows(table):
+    """A táblázat közvetlen w:tr gyerekei."""
+    return table._tbl.findall(qn("w:tr"))
+
+
+def row_cells(tr):
+    """Egy sor közvetlen w:tc gyerekei."""
+    return tr.findall(qn("w:tc"))
+
+
+def cell_paragraph(table, row_idx, cell_idx, para_idx=0):
+    """Egy táblázatcella közvetlen w:p gyerekei közül a para_idx-edik.
+
+    A visszaadott objektum közönséges python-docx Paragraph, tehát a
+    blank_groups() / clear_choice_marks() / keep() / mark_substituted()
+    primitívek változtatás nélkül működnek rajta."""
+    tc = row_cells(table_rows(table)[row_idx])[cell_idx]
+    return _Cell(tc, table).paragraphs[para_idx]
+
+
+def fill_cell(paragraph, value):
+    """Táblázatcella kitöltése a megadott értékkel.
+
+    A törzsbekezdésekkel ELLENTÉTBEN a sablon táblázataiban egyetlen
+    áthúzott "kitöltendő hely" futás sincs (ld. README), ezért itt nem
+    építhetünk a blank_groups()-ra: a cella első futásának szövegét írjuk
+    felül, a többit kiürítjük, teljesen üres cellába pedig új futást hozunk
+    létre. A behelyettesített szöveget ugyanazzal a jelöléssel hagyjuk
+    (sárga kiemelés, áthúzás, piros betű), mint a törzsben - a
+    felülvizsgáló kolléga így a táblázatokban is elsőre látja, mi került be
+    automatikusan."""
+    text = text_value(value)
+    runs = paragraph.runs
+    if runs:
+        runs[0].text = text
+        mark_substituted(runs[0])
+        for r in runs[1:]:
+            r.text = ""
+        clear_choice_marks(paragraph, except_runs={0})
+    else:
+        mark_substituted(paragraph.add_run(text))
+
+
+def delete_table(table):
+    """Egy teljes táblázat törlése - akkor kell, ha a hozzá tartozó
+    VAGY-ágat is töröljük, különben árván maradna a dokumentumban."""
+    tbl = table._tbl
+    tbl.getparent().remove(tbl)
+
+
+def clone_row(table, row_idx):
+    """A megadott sor másolatát szúrja be közvetlenül az eredeti után.
+
+    A sablon több táblázata egyetlen üres adatsorral érkezik, miközben a
+    kérdőívnek több, egymástól elkülönülő válasza van rá (pl. a kimenő
+    számla és az egyéb kimenő bizonylat aláírója)."""
+    tr = table_rows(table)[row_idx]
+    new_tr = copy.deepcopy(tr)
+    tr.addnext(new_tr)
+    return new_tr
 
 
 # --------------------------------------------------------------------------
@@ -163,6 +245,32 @@ def illustrative_date(fordulonap_honap, fordulonap_nap, offset_days):
         return target.month, target.day
     except Exception:
         return "…", "…"
+
+
+def text_value(value):
+    """Egy válasz szöveggé alakítása behelyettesítés előtt.
+
+    FIGYELEM: a docx.js `textValue()` függvényének PONTOS párja kell legyen.
+    A nyers Python `str()` és a JS `String()` NEM ekvivalens minden típusra,
+    és a kettő eltérése bitre eltérő dokumentumot eredményezne:
+
+      - `str(20.0)` -> "20.0", a `String(20.0)` viszont -> "20". A JS-ben a
+        20.0 és a 20 UGYANAZ az érték, megkülönböztetni nem lehet őket,
+        ezért az egész értékű lebegőpontos számokat mindkét oldalon
+        egészként írjuk ki.
+      - `str(True)` -> "True", a `String(true)` viszont -> "true".
+
+    Az űrlapokról mindig sztring érkezik; ez a helper a kézzel írt vagy
+    programmal generált answers.json-ok szám-/logikai értékeit teszi
+    biztonságossá.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
 
 
 def is_number(value):
@@ -783,6 +891,91 @@ def resolve_ert4(p, a):
     delete(p[1498])
 
 
+def resolve_cegadatok(p, a, t):
+    """Szv#1/2/5/6 - a dokumentum fejlécében álló cégadat-táblázat (t[0]).
+
+    A táblázat a 7. és 8. bekezdés között áll, hat sorral: CÉGNÉV,
+    SZÉKHELY, ADÓSZÁM, CÉGJEGYZÉKSZÁM, "A VÁLLALKOZÁS KÉPVISELETÉRE
+    JOGOSULT SZEMÉLY", végül a "a továbbiakban: Vállalkozás" sor (ez utóbbi
+    statikus, nem kitöltendő). A bal oszlop a felirat, a jobb oszlop az
+    érték - mindegyik értékcella üresen érkezik a sablonban.
+
+    Az első sor mindkét cellája HÁROM bekezdésből áll (üres / szöveg /
+    üres), ezért ott a középső (1. indexű) bekezdésbe írunk, hogy az érték
+    a "CÉGNÉV" felirattal azonos sorban álljon; a többi értékcellának
+    egyetlen bekezdése van."""
+    tbl = t[0]
+    fill_cell(cell_paragraph(tbl, 0, 1, 1), a.get("szv1", ""))
+    fill_cell(cell_paragraph(tbl, 1, 1), a.get("szv2", ""))
+    fill_cell(cell_paragraph(tbl, 2, 1), a.get("szv6", ""))
+    fill_cell(cell_paragraph(tbl, 3, 1), a.get("cegjegyzekszam", ""))
+    fill_cell(cell_paragraph(tbl, 4, 1), a.get("szv5", ""))
+
+
+def resolve_bizonylat_alairas(p, a, t):
+    """Szv#51/52/53 - VII.3.6. A bizonylatok hitelessége.
+
+    1035 = a hitelességet a Vállalkozás képviseletére jogosult személy
+    aláírása igazolja, 1037 = VAGY, 1039 = "az egyes ... bizonylat típusok
+    esetében az alábbiakban felsorolt, arra feljogosított személyek
+    aláírásával igazolható:" - és EHHEZ az ághoz tartozik a t[2] táblázat
+    (fejléc: "Bizonylat típus | Feljogosított aláíró", egyetlen üres
+    adatsorral).
+
+    A README korábban pontosan ezt a csoportot hozta fel példaként arra,
+    miért nem lehetett bekötni: a "képviselő aláírása" ág választásakor a
+    1039 bekezdés törlése egy árván maradt, üres táblázatot hagyott volna a
+    dokumentumban. A delete_table() primitívvel ez már megoldható.
+
+    A táblázat egyetlen adatsora két, egymástól elkülönülő választ kapna
+    (Szv#52 = kimenő számlák, Szv#53 = egyéb kimenő számviteli
+    bizonylatok), ezért a sort megduplázzuk. A bizonylattípus-feliratok
+    magának az adatbekérőnek a szóhasználatát követik, nem találunk ki új
+    kategóriákat."""
+    tbl = t[2]
+    tipus = answer(a, "bizonylat_hitelesites_tipus", "kepviselo_alairasa")
+    if tipus == "feljogositott_szemelyek":
+        keep(p[1039])
+        delete(p[1035])
+        keep(cell_paragraph(tbl, 0, 0))
+        keep(cell_paragraph(tbl, 0, 1))
+        fill_cell(cell_paragraph(tbl, 1, 0), "Kimenő számla")
+        fill_cell(cell_paragraph(tbl, 1, 1), a.get("szv52", ""))
+        clone_row(tbl, 1)
+        fill_cell(cell_paragraph(tbl, 2, 0), "Egyéb kimenő számviteli bizonylat")
+        fill_cell(cell_paragraph(tbl, 2, 1), a.get("szv53", ""))
+    else:
+        keep(p[1035])
+        delete(p[1039])
+        delete_table(tbl)
+    delete(p[1037])
+
+
+def resolve_ertekvesztes_mertekek(p, a, t):
+    """Szv#75/76/84/87 - a "jelentős" könyv szerinti / piaci érték eltérés
+    kategóriánkénti mértékei (t[5]), az 1720. bekezdés felvezetésével
+    ("A könyv szerinti érték és a piaci érték közötti különbséget
+    jelentősnek tekintjük az alábbiak szerint:").
+
+    A táblázat MINDEN kategóriasora tartalmaz egy 20%-os sablon-alapértéket
+    a "Százalék" oszlopban (a 3. oszlop, "Érték (E Ft)", végig üres, és
+    nincs is rá kérdőív-adat - nem nyúlunk hozzá).
+
+    Csak azt a NÉGY sort írjuk felül, amelyre az adatbekérőnek célzott
+    kérdése van - I. Immateriális javak (Szv#75), III. Befektetett
+    pénzügyi eszközök (Szv#76), IV. Készletek (Szv#84), V. Követelések
+    (Szv#87) -, és csak akkor, ha az ügyfél tényleg megadott értéket. Üres
+    válasznál a sablon 20%-os alapértéke marad, mert az egy érvényes
+    alapértelmezés, nem egy kitöltetlen hely. A II. Tárgyi eszközök,
+    VI. Értékpapírok, VII. Pénzeszközök és VIII. Részesedések sorokhoz nincs
+    kérdés, azokat sosem módosítjuk."""
+    tbl = t[5]
+    for row_idx, key in ((2, "szv75"), (4, "szv76"), (5, "szv84"), (6, "szv87")):
+        value = answer(a, key, "")
+        if value != "":
+            fill_cell(cell_paragraph(tbl, row_idx, 2), value)
+
+
 def generate(answers_path, output_path):
     answers = json.loads(Path(answers_path).read_text(encoding="utf-8"))
     answers = {k: v for k, v in answers.items() if not k.startswith("_")}
@@ -795,6 +988,10 @@ def generate(answers_path, output_path):
     # függvény újra kiolvasná a doc.paragraphs-t, a korábbi törlések miatt
     # minden utána következő index elcsúszna.
     p = doc.paragraphs
+    # Ugyanez a táblázatokra: a doc.tables listát is EGYSZER olvassuk ki,
+    # mert a resolve_bizonylat_alairas() egy egész táblázatot törölhet, ami
+    # utána elcsúsztatná a többi táblázat indexét.
+    t = doc.tables
 
     resolve_nyelv(p, answers)
     resolve_penznem(p, answers)
@@ -823,6 +1020,9 @@ def generate(answers_path, output_path):
     resolve_ertekpapir_elhatarolas(p, answers)
     resolve_arfolyamveszteseg(p, answers)
     resolve_onkoltsegszamitas(p, answers)
+    resolve_cegadatok(p, answers, t)
+    resolve_bizonylat_alairas(p, answers, t)
+    resolve_ertekvesztes_mertekek(p, answers, t)
     remove_jelolt_instructions(p)
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)

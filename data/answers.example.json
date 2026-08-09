@@ -1,6 +1,21 @@
 {
   "_leiras": "Minta válaszkészlet teszteléshez - egy fiktív ügyfél adataival.",
 
+  "szv1": "Példa Kereskedelmi és Szolgáltató Kft.",
+  "szv2": "1111 Budapest, Példa utca 1.",
+  "szv5": "Kovács János ügyvezető",
+  "szv6": "12345678-2-41",
+  "cegjegyzekszam": "01-09-123456",
+
+  "bizonylat_hitelesites_tipus": "feljogositott_szemelyek",
+  "szv52": "Kovács János ügyvezető és Nagy Éva gazdasági vezető együttesen",
+  "szv53": "Nagy Éva gazdasági vezető",
+
+  "szv75": "15 %",
+  "szv76": "25 %",
+  "szv84": "30 %",
+  "szv87": "10 %",
+
   "penznem_tipus": "forint",
   "penznem_atteres_datum": "",
   "penznem_egyeb_neve": "",

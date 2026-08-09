@@ -6,16 +6,14 @@
       "forras": "ugyfel",
       "eredeti": "Szv#1",
       "kerdes": "neve",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv2",
       "forras": "ugyfel",
       "eredeti": "Szv#2",
       "kerdes": "székhelye",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv3",
@@ -38,16 +36,21 @@
       "forras": "ugyfel",
       "eredeti": "Szv#5",
       "kerdes": "felelős vezetői/képviseletre jogosultak",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv6",
       "forras": "ugyfel",
       "eredeti": "Szv#6",
       "kerdes": "adószáma",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
+    },
+    {
+      "kulcs": "cegjegyzekszam",
+      "forras": "ugyfel",
+      "eredeti": "Szv#6",
+      "kerdes": "cégjegyzékszáma",
+      "tipus": "text"
     },
     {
       "kulcs": "szv7",
@@ -726,12 +729,19 @@
       "tipus": "text"
     },
     {
-      "kulcs": "szv51",
-      "forras": "ugyfel",
+      "kulcs": "bizonylat_hitelesites_tipus",
+      "forras": "iroda",
       "eredeti": "Szv#51",
-      "kerdes": "A kimenő számlákat aláírják?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "kerdes": "A kimenő számlákat aláírják? (A bizonylatok alaki/tartalmi hitelességét a képviseletre jogosult aláírása igazolja, vagy bizonylattípusonként külön feljogosított aláírók vannak?)",
+      "tipus": "select",
+      "opciok": [
+        "kepviselo_alairasa",
+        "feljogositott_szemelyek"
+      ],
+      "cimkek": [
+        "A képviseletre jogosult személy aláírása",
+        "Bizonylattípusonként feljogosított aláírók"
+      ]
     },
     {
       "kulcs": "szv52",
@@ -739,7 +749,11 @@
       "eredeti": "Szv#52",
       "kerdes": "Ki jogosult a kimenő számlák aláírására?",
       "tipus": "text",
-      "_nincs_sablonhely": true
+      "csak_ha": {
+        "bizonylat_hitelesites_tipus": [
+          "feljogositott_szemelyek"
+        ]
+      }
     },
     {
       "kulcs": "szv53",
@@ -747,7 +761,11 @@
       "eredeti": "Szv#53",
       "kerdes": "Ki jogosult az egyéb kimenő számviteli bizonylatok aláírására?",
       "tipus": "text",
-      "_nincs_sablonhely": true
+      "csak_ha": {
+        "bizonylat_hitelesites_tipus": [
+          "feljogositott_szemelyek"
+        ]
+      }
     },
     {
       "kulcs": "szv54",
@@ -1063,17 +1081,15 @@
       "kulcs": "szv75",
       "forras": "ugyfel",
       "eredeti": "Szv#75",
-      "kerdes": "Terven felüli értékcsökkenés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést?  Immateriális javak esetében?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "kerdes": "Terven felüli értékcsökkenés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést?  Immateriális javak esetében? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "tipus": "text"
     },
     {
       "kulcs": "szv76",
       "forras": "ugyfel",
       "eredeti": "Szv#76",
-      "kerdes": "Befektetett pénzügyi eszközök esetében határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "kerdes": "Befektetett pénzügyi eszközök esetében határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "tipus": "text"
     },
     {
       "kulcs": "szv77",
@@ -1150,9 +1166,8 @@
       "kulcs": "szv84",
       "forras": "ugyfel",
       "eredeti": "Szv#84",
-      "kerdes": "Készlet értékvesztés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "kerdes": "Készlet értékvesztés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "tipus": "text"
     },
     {
       "kulcs": "szv85",
@@ -1174,9 +1189,8 @@
       "kulcs": "szv87",
       "forras": "ugyfel",
       "eredeti": "Szv#87",
-      "kerdes": "A követelésekre elszámolandó értékvesztések összegét hogyan, milyen mértékek alkalmazásával határozzák meg?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "kerdes": "A követelésekre elszámolandó értékvesztések összegét hogyan, milyen mértékek alkalmazásával határozzák meg? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "tipus": "text"
     },
     {
       "kulcs": "szv88",

@@ -20,12 +20,26 @@ BASE = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BASE / "scripts"))
 
 import docx  # noqa: E402
+from docx.table import _Cell  # noqa: E402
+
 import generate_policy  # noqa: E402
 
 MARK = ("YELLOW (7)", True, "C00000")  # a mark_substituted() jelölése
 
 
+def _is_marked(r):
+    color = None
+    if r.font.color is not None and r.font.color.type is not None:
+        color = str(r.font.color.rgb)
+    return (str(r.font.highlight_color), bool(r.font.strike), color) == MARK
+
+
 def load(answers_path):
+    """A legenerált vázlat bekezdés-szövegei, a behelyettesítettként jelölt
+    futások, valamint a TÁBLÁZATOK tartalma (cellaszövegek soronként).
+
+    A táblázatokat a doc.paragraphs egyáltalán nem tartalmazza, ezért a
+    táblázatba kitöltött válaszokat külön kell összegyűjteni."""
     out = Path(tempfile.mkdtemp()) / "o.docx"
     generate_policy.generate(answers_path, out)
     doc = docx.Document(str(out))
@@ -33,17 +47,30 @@ def load(answers_path):
     marked = []
     for p in doc.paragraphs:
         for r in p.runs:
-            color = None
-            if r.font.color is not None and r.font.color.type is not None:
-                color = str(r.font.color.rgb)
-            if (str(r.font.highlight_color), bool(r.font.strike), color) == MARK:
+            if _is_marked(r):
                 marked.append(r.text)
-    return paras, marked
+    tables = []
+    for tbl in doc.tables:
+        rows = []
+        for tr in generate_policy.table_rows(tbl):
+            cells = []
+            for tc in generate_policy.row_cells(tr):
+                cell = _Cell(tc, tbl)
+                cells.append(" ".join(p.text for p in cell.paragraphs).strip())
+                for p in cell.paragraphs:
+                    for r in p.runs:
+                        if _is_marked(r):
+                            marked.append(r.text)
+            rows.append(cells)
+        tables.append(rows)
+    return paras, marked, tables
 
 
-def check(answers_path, must_contain, must_not_contain, must_be_marked):
-    paras, marked = load(answers_path)
+def check(answers_path, must_contain, must_not_contain, must_be_marked,
+          table_rows_present=(), table_rows_absent=(), table_count=None):
+    paras, marked, tables = load(answers_path)
     body = "\n".join(paras)
+    flat_rows = [" | ".join(row) for tbl in tables for row in tbl]
     name = Path(answers_path).name
     fails = []
     for s in must_contain:
@@ -55,9 +82,17 @@ def check(answers_path, must_contain, must_not_contain, must_be_marked):
     for s in must_be_marked:
         if s not in marked:
             fails.append(f"NEM behelyettesítettként jelölt (sárga/áthúzott/piros): {s!r}")
+    if table_count is not None and len(tables) != table_count:
+        fails.append(f"a táblázatok száma {len(tables)}, várt: {table_count}")
+    for s in table_rows_present:
+        if not any(s in row for row in flat_rows):
+            fails.append(f"HIÁNYZIK a táblázatokból: {s!r}")
+    for s in table_rows_absent:
+        if any(s in row for row in flat_rows):
+            fails.append(f"BENNMARADT a táblázatokban: {s!r}")
     # a VAGY / VÁLASZTANI KELL elválasztók a feloldott csoportokból eltűntek-e
     print(f"  {'HIBA' if fails else 'OK  '}  {name}: {len(paras)} bekezdés, "
-          f"{len(marked)} behelyettesített run")
+          f"{len(marked)} behelyettesített run, {len(tables)} táblázat")
     for f in fails:
         print(f"        - {f}")
     return not fails
@@ -112,6 +147,32 @@ def main():
             ans1["konyvelo_program"],
             ans1["idegen_nyelv"],
             ans1["evkozi_zarasok_feladatai"],
+            # táblázatba behelyettesített válaszok is jelölve vannak
+            ans1["szv1"],
+            ans1["cegjegyzekszam"],
+            ans1["szv52"],
+            ans1["szv75"],
+        ],
+        # a bizonylat-aláíró ág marad -> mind a 6 táblázat megvan
+        table_count=6,
+        table_rows_present=[
+            # fejléc-táblázat (cégadatok)
+            ans1["szv1"], ans1["szv2"], ans1["szv6"], ans1["cegjegyzekszam"], ans1["szv5"],
+            # aláíró-táblázat: a sablon 1 üres sorából 2 kitöltött sor lett
+            f'Kimenő számla | {ans1["szv52"]}',
+            f'Egyéb kimenő számviteli bizonylat | {ans1["szv53"]}',
+            # értékvesztési mértékek: a lefedett kategóriák felülírva...
+            f'I. | Immateriális javak | {ans1["szv75"]}',
+            f'III. | Befektetett pénzügyi eszközök | {ans1["szv76"]}',
+            f'IV. | Készletek | {ans1["szv84"]}',
+            f'V. | Követelések | {ans1["szv87"]}',
+            # ...a kérdéssel nem lefedett kategóriák viszont NEM
+            "II. | Tárgyi eszközök | 20 %",
+            "VI. | Értékpapírok | 20 %",
+            "VIII. | Részesedések | 20 %",
+            # a szándékosan érintetlenül hagyott sablon-táblázatok default szövege
+            "Készpénzforgalom bizonylatának feldolgozása",
+            "Főkönyvi kivonat készítése",
         ],
     )
 
@@ -147,6 +208,24 @@ def main():
             ans2["konyvvizsgalo_adatai"],
             ans2["beszamolo_honlap_cim"],
             ans2["celtartalek_elteres_szazalek"],
+            ans2["szv1"],
+            ans2["cegjegyzekszam"],
+        ],
+        # a "képviselő aláírása" ág marad -> az aláíró-táblázatot töröltük,
+        # így 6 helyett csak 5 táblázat maradt a dokumentumban
+        table_count=5,
+        table_rows_present=[
+            ans2["szv1"], ans2["szv2"], ans2["szv6"], ans2["cegjegyzekszam"], ans2["szv5"],
+            # üres %-válaszoknál MINDEN kategória megtartja a 20%-os alapértéket
+            "I. | Immateriális javak | 20 %",
+            "III. | Befektetett pénzügyi eszközök | 20 %",
+            "IV. | Készletek | 20 %",
+            "V. | Követelések | 20 %",
+        ],
+        table_rows_absent=[
+            # az aláíró-táblázat fejléce sem maradhatott a dokumentumban
+            "Feljogosított aláíró",
+            "Kimenő számla",
         ],
     )
 

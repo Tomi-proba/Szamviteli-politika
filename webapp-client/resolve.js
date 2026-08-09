@@ -442,6 +442,52 @@ function resolveErt4(p, a, xmlDoc) {
   deleteP(p[1498]);
 }
 
+function resolveCegadatok(p, a, t, xmlDoc) {
+  // Szv#1/2/5/6 - a fejléc cégadat-táblázata (ld. generate_policy.py).
+  // Az első sor értékcellája HÁROM bekezdésből áll, ott a középsőbe írunk.
+  const tbl = t[0];
+  fillCell(cellParagraph(tbl, 0, 1, 1), a.szv1 || '', xmlDoc);
+  fillCell(cellParagraph(tbl, 1, 1), a.szv2 || '', xmlDoc);
+  fillCell(cellParagraph(tbl, 2, 1), a.szv6 || '', xmlDoc);
+  fillCell(cellParagraph(tbl, 3, 1), a.cegjegyzekszam || '', xmlDoc);
+  fillCell(cellParagraph(tbl, 4, 1), a.szv5 || '', xmlDoc);
+}
+
+function resolveBizonylatAlairas(p, a, t, xmlDoc) {
+  // Szv#51/52/53 - VII.3.6. A bizonylatok hitelessége. A 1039 ághoz tartozik
+  // a t[2] táblázat, ezért a másik ágban a táblázatot is törölni kell
+  // (ld. generate_policy.py részletes megjegyzését).
+  const tbl = t[2];
+  const tipus = answer(a, 'bizonylat_hitelesites_tipus', 'kepviselo_alairasa');
+  if (tipus === 'feljogositott_szemelyek') {
+    keepP(p[1039], xmlDoc);
+    deleteP(p[1035]);
+    keepP(cellParagraph(tbl, 0, 0), xmlDoc);
+    keepP(cellParagraph(tbl, 0, 1), xmlDoc);
+    fillCell(cellParagraph(tbl, 1, 0), 'Kimenő számla', xmlDoc);
+    fillCell(cellParagraph(tbl, 1, 1), a.szv52 || '', xmlDoc);
+    cloneRow(tbl, 1);
+    fillCell(cellParagraph(tbl, 2, 0), 'Egyéb kimenő számviteli bizonylat', xmlDoc);
+    fillCell(cellParagraph(tbl, 2, 1), a.szv53 || '', xmlDoc);
+  } else {
+    keepP(p[1035], xmlDoc);
+    deleteP(p[1039]);
+    deleteTable(tbl);
+  }
+  deleteP(p[1037]);
+}
+
+function resolveErtekvesztesMertekek(p, a, t, xmlDoc) {
+  // Szv#75/76/84/87 - kategóriánkénti "jelentős eltérés" %-os mértékek.
+  // Csak a négy, kérdéssel lefedett sort írjuk felül, és csak ha van válasz -
+  // különben marad a sablon 20%-os alapértéke (ld. generate_policy.py).
+  const tbl = t[5];
+  for (const [rowIdx, key] of [[2, 'szv75'], [4, 'szv76'], [5, 'szv84'], [6, 'szv87']]) {
+    const value = answer(a, key, '');
+    if (value !== '') fillCell(cellParagraph(tbl, rowIdx, 2), value, xmlDoc);
+  }
+}
+
 async function generateFromAnswers(templateB64, answers) {
   const bin = atob(templateB64);
   const bytes = new Uint8Array(bin.length);
@@ -450,6 +496,9 @@ async function generateFromAnswers(templateB64, answers) {
   const xmlText = await readEntryText(zip, 'word/document.xml');
   const xmlDoc = new DOMParser().parseFromString(xmlText, 'application/xml');
   const p = getBodyParagraphs(xmlDoc);
+  // A bekezdéslistához hasonlóan a táblázatlistát is EGYSZER olvassuk ki -
+  // a resolveBizonylatAlairas() egy egész táblázatot törölhet.
+  const t = getTables(xmlDoc);
 
   resolveNyelv(p, answers, xmlDoc);
   resolvePenznem(p, answers, xmlDoc);
@@ -478,6 +527,9 @@ async function generateFromAnswers(templateB64, answers) {
   resolveErtekpapirElhatarolas(p, answers, xmlDoc);
   resolveArfolyamveszteseg(p, answers, xmlDoc);
   resolveOnkoltsegszamitas(p, answers, xmlDoc);
+  resolveCegadatok(p, answers, t, xmlDoc);
+  resolveBizonylatAlairas(p, answers, t, xmlDoc);
+  resolveErtekvesztesMertekek(p, answers, t, xmlDoc);
   removeJeloltInstructions(p);
 
   const newXml = new XMLSerializer().serializeToString(xmlDoc);

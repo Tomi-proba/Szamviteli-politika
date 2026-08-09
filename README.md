@@ -96,7 +96,9 @@ python3 scripts/generate_policy.py data/answers.example.json output/valami.docx
 ```
 
 A script:
-1. **Kitölti** a kérdőívben megválaszolt ~45 helyet a sablonban.
+1. **Kitölti** a kérdőívben megválaszolt ~45 helyet a sablonban, valamint a
+   fejléc cégadat-, a bizonylat-aláíró és az értékvesztési mértékek
+   **táblázatának** celláit (ld. „Táblázatok kezelése”).
 2. A dokumentumban sok helyen két vagy több, "VAGY" szóval elválasztott
    **alternatív bekezdés** van (pl. "kötelező a könyvvizsgálat" / "nem
    kötelező" / "önkéntes"). A válaszok alapján kiválasztja a megfelelőt, és
@@ -124,17 +126,20 @@ választó-kérdéssel.
 
 | | darab |
 |---|---|
-| kérdés összesen a `questions.json`-ban | **151** |
-| ebből a motor automatikusan behelyettesíti / ág-választásra használja | **64** |
-| ebből jelenleg nincs kitöltendő helye a sablonban (`_nincs_sablonhely`) | **87** |
-| lefedett *forrás*-kérdés (Szv#/Ért# szám szerint) | **35** |
-| `resolve_*` függvény (Python és JS oldalon egyaránt) | **27** |
+| kérdés összesen a `questions.json`-ban | **152** |
+| ebből a motor automatikusan behelyettesíti / ág-választásra használja | **76** |
+| ebből jelenleg nincs kitöltendő helye a sablonban (`_nincs_sablonhely`) | **76** |
+| lefedett *forrás*-kérdés (Szv#/Ért# szám szerint) | **46** |
+| `resolve_*` függvény (Python és JS oldalon egyaránt) | **30** |
 
-A bekötött forráskérdések: Szv#12, 13, 14, 15, 16, 17, 18, 19, 21, 25/28,
-29, 31, 32, 33, 35, 36, 37, 39, 41, 43, 44, 45, 49, 50, 57, 59, 61, 63,
-83, 94, 95, 96, 101, 106 és Ért#4. (A Szv#95-höz felvett választó-kérdés
-egyben az Ért#5 által is jelölt döntési pontot oldja fel – ugyanaz a
-bekezdés-csoport.)
+A bekötött forráskérdések: Szv#1, 2, 5, 6, 12, 13, 14, 15, 16, 17, 18, 19,
+21, 25/28, 29, 31, 32, 33, 35, 36, 37, 39, 41, 43, 44, 45, 49, 50, 51, 52,
+53, 57, 59, 61, 63, 75, 76, 83, 84, 87, 94, 95, 96, 101, 106 és Ért#4.
+(A Szv#95-höz felvett választó-kérdés egyben az Ért#5 által is jelölt
+döntési pontot oldja fel – ugyanaz a bekezdés-csoport.)
+
+Ebből Szv#1, 2, 5, 6, 51, 52, 53, 75, 76, 84 és 87 **táblázatba** kerül –
+ld. a „Táblázatok kezelése” fejezetet lentebb.
 
 A fennmaradó ~87 kérdés (cégadatok, könyvelési gyakorlat részletei,
 eszközértékelési szabályok stb.) az űrlapon megjelenik és a válasz
@@ -156,11 +161,12 @@ készült automatizmus**, mert a sablon szerkezete nem teszi biztonságossá:
   200 eFt-os értékhatár, Szv#108 TAO/KIVA, Szv#110 GloBE). Ide egy válasz
   behelyettesítéséhez a mondat szövegét kellene átírni, amire a motor
   bekezdés- és futás-szintű primitívjei nem alkalmasak.
-- **A válasz egy TÁBLÁZATBA tartozna** (Szv#51/52/53 aláírásra jogosultak,
-  Szv#54 feldolgozási határidők, Szv#55/56 zárlati ütemezés, Szv#75/76/84/87
-  értékvesztési %-os mértékek). A motor kizárólag a törzs bekezdéseivel
-  dolgozik, táblázatot nem módosít és nem is töröl – így pl. a Szv#51/52
-  VAGY-ágának törlése egy árván maradt táblázatot hagyna a dokumentumban.
+- **A válasz olyan TÁBLÁZATBA tartozna, amit nem biztonságos gépiesíteni**
+  (Szv#54 feldolgozási határidők, Szv#55/56 zárlati ütemezés). Ezek a
+  táblázatok már ki vannak töltve helyes, általános szakmai
+  alapértelmezésekkel – ld. a „Táblázatok kezelése” fejezetet. (A többi
+  táblázatos kérdés – Szv#51/52/53 és Szv#75/76/84/87 – 2026-tól **be van
+  kötve**.)
 - **A jelölés egy kötelező törvényi felsorolás egy sorára mutat**
   (Szv#66/67/68 környezetvédelmi közzétételek a kiegészítő melléklet
   tartalomjegyzékében). Egy "nem" válasz alapján statutórius szövegsort
@@ -188,6 +194,97 @@ Vagyis a legenerált dokumentum továbbra is egy **részleges vázlat**, de
 típusa, a teljes kiegészítő melléklet-blokk (éves vs. egyszerűsített), a
 költségelszámolás módja, a pénzkezelés felelőse és több értékelési
 VAGY-döntés is automatikusan feloldódik.
+
+## Táblázatok kezelése
+
+A motor sokáig **kizárólag a törzs közvetlen bekezdéseivel** dolgozott: a
+Python oldalon a `doc.paragraphs`, a JS oldalon a `getBodyParagraphs()` is
+átlépi a `w:tbl` elemeket, így a táblázatok tartalma egyik motornak sem
+volt látható. A `merged.docx`-ban **6 táblázat** van; az alábbiak szerint
+kezeljük őket.
+
+### Amit a motor kitölt
+
+| # | táblázat | forrás-kérdés | mit csinál |
+|---|---|---|---|
+| 0 | fejléc cégadatok (CÉGNÉV / SZÉKHELY / ADÓSZÁM / CÉGJEGYZÉKSZÁM / képviselő) | Szv#1, 2, 5, 6 + `cegjegyzekszam` | mind az 5 értékcellát kitölti |
+| 2 | „Bizonylat típus \| Feljogosított aláíró” | Szv#51, 52, 53 | a VAGY-ág szerint vagy kitölti (2 sorra bővítve), vagy **az egész táblázatot törli** |
+| 5 | értékvesztési %-os mértékek kategóriánként | Szv#75, 76, 84, 87 | csak a 4 lefedett kategóriasor „Százalék” celláját írja felül, és csak ha van válasz |
+
+A **0. táblázat** első sorának mindkét cellája három bekezdésből áll (üres /
+szöveg / üres), ezért ott a középső bekezdésbe írunk, hogy az érték a
+„CÉGNÉV” felirattal egy sorba kerüljön. A `cegjegyzekszam` az egyetlen
+**újonnan felvett** kérdés: a sablon fejlécében van rá sor, az adatbekérő
+viszont nem kérdezi külön, ezért az adószám (Szv#6) mellé került.
+
+A **2. táblázat** a VII.3.6. („A bizonylatok hitelessége”) VAGY-csoport
+második ágához tartozik. A README korábban éppen ezt hozta fel példaként
+arra, miért nem lehet bekötni: a „képviselő aláírása” ág választásakor a
+másik bekezdés törlése egy **árván maradt, üres táblázatot** hagyott volna a
+dokumentumban. A `delete_table()` / `deleteTable()` primitívvel ez már
+megoldható, ezért az Szv#51 helyére egy iroda-oldali választó-kérdés
+(`bizonylat_hitelesites_tipus`) került, az Szv#52/53 pedig `csak_ha`-val
+erre épül. A sablon egyetlen üres adatsorát `clone_row()` /
+`cloneRow()` duplikálja, mert a kérdőívnek két, egymástól elkülönülő
+válasza van rá (kimenő számla, illetve egyéb kimenő számviteli bizonylat) –
+a bizonylattípus-feliratok magának az adatbekérőnek a szóhasználatát
+követik, nem találunk ki új kategóriákat.
+
+Az **5. táblázat** minden kategóriasora tartalmaz egy 20%-os
+sablon-alapértéket. Csak azt a négy sort írjuk felül, amelyre az
+adatbekérőnek célzott kérdése van (I. Immateriális javak, III. Befektetett
+pénzügyi eszközök, IV. Készletek, V. Követelések), és **csak akkor, ha az
+ügyfél tényleg megadott értéket** – üres válasznál marad a 20%, mert az egy
+érvényes alapértelmezés, nem egy kitöltetlen hely. A II. Tárgyi eszközök,
+VI. Értékpapírok, VII. Pénzeszközök és VIII. Részesedések sorokhoz nincs
+kérdés, azokat sosem módosítjuk, ahogy a végig üres „Érték (E Ft)” oszlopot
+sem.
+
+### Amihez szándékosan NEM nyúlunk
+
+| # | táblázat | miért marad érintetlen |
+|---|---|---|
+| 1 | „Hatáskör \| Felelős” (II.1., egyetlen üres adatsor) | A 2026-os jelölés szerint az Szv#31-hez tartozik, de az Szv#31 két meglévő kérdése (`ertekeles_felelos_tipus` / `ertekelesi_delegalas`) a II.3. fejezet *értékelési* feladataira vonatkozik, és oda is van bekötve (338. bekezdés). A táblázat két oszlopa (hatáskör + felelős) **párokat** várna, amire az adatbekérőben nincs kérdés; a „Hatáskör” oszlop szövegét nekünk kellene kitalálni. Ez fabrikálás lenne, ezért a sort a felülvizsgáló kolléga tölti ki. |
+| 3 | „Bizonylat típus \| Analitikában \| Főkönyvben” (Szv#54) | Mind a 4 adatsor **helyes, általános szakmai alapértelmezéssel** érkezik (pl. „késedelem nélkül”, „legkésőbb a negyedévet követő hó végéig”). Az Szv#54 EGYETLEN szabadszöveges válasz, amiből 8 cellát kitölteni nem lehet; a meglévő, jogilag korrekt szöveg felülírása vagy törlése kárt okozna. |
+| 4 | „Számviteli teendő \| Határidő” (Szv#55/56, 15 adatsor) | Ugyanaz az eset, még hangsúlyosabban: mind a 15 sor kitöltött, érvényes zárlati ütemezés. Az Szv#55 („történik-e havi/negyedéves zárás?”) és az Szv#56 („mi a határidő?”) két szabadszöveges válasz – ebből 15 sort gépiesen levezetni nem lehet. A sablon maga is „VÁLLAKOZÁSSPECIFIKUSRA KELL ALAKÍTANI” megjegyzést tesz elé: ez tudatosan a felülvizsgáló kolléga feladata. |
+
+Ez ugyanaz az elv, mint a nem táblázatos, szándékosan bekötetlenül hagyott
+kérdéseknél: **inkább maradjon `_nincs_sablonhely` egy dokumentált
+indokkal, mint hogy a motor egy jogilag helyes alapértelmezést elrontson.**
+
+### A táblázat-primitívek
+
+A `blank_groups()` / `fill_blanks()` **nem használható** táblázatban: a
+sablon egyetlen táblázatcellájában sincs áthúzott „kitöltendő hely” futás,
+amire a kitöltendő helyek keresése épül. Ezért külön primitívek készültek,
+mindkét motorban szigorúan párban:
+
+| Python (`generate_policy.py`) | JS (`docx.js`) | szerep |
+|---|---|---|
+| `table_rows()` / `row_cells()` | `getRows()` / `getCells()` | a **nyers** `w:tr` / `w:tc` gyerekek |
+| `cell_paragraph()` | `cellParagraph()` | cella adott sorszámú `w:p` gyereke |
+| `fill_cell()` | `fillCell()` | cella kitöltése + a szokásos sárga/áthúzott/piros jelölés |
+| `delete_table()` | `deleteTable()` | teljes táblázat törlése |
+| `clone_row()` | `cloneRow()` | sor duplikálása közvetlenül az eredeti után |
+
+**Fontos: a cellákat szándékosan a nyers `w:tc` gyerekekből indexeljük**, és
+nem a python-docx `table.rows[i].cells[j]` rácsából. A python-docx a
+vízszintesen összevont (`gridSpan`) cellákat a rácsban többször is
+felsorolja – az 5. táblázat fejlécsora fizikailag 3 db `w:tc`, a rácsban
+viszont 4 cella –, a JS oldal viszont csak a nyers XML-gyerekeket látja. Ha
+a két motor máshogy indexelne, ugyanaz a `resolve_*` MÁS cellába írna.
+
+A `generate()` a bekezdéslistához hasonlóan a **táblázatlistát is egyszer**
+olvassa ki (`t = doc.tables`, illetve `const t = getTables(xmlDoc)`), mert a
+`resolve_bizonylat_alairas()` egy egész táblázatot törölhet, ami utána
+elcsúsztatná a többi táblázat indexét.
+
+A `parity_check.py` run-lenyomata **kiterjed a táblázatokra is**
+(táblázat/sor/cella/bekezdés indexekkel együtt) – e nélkül a
+táblázat-kitöltés bármilyen Python↔JS eltérése némán átcsúszna a
+paritás-ellenőrzésen, hiszen a `doc.paragraphs` a táblázatokat nem
+tartalmazza. Így egy törölt táblázat, egy duplikált sor vagy egy elcsúszott
+cella is azonnal eltérésként jelentkezik.
 
 ## A 2026-os megjelölt sablon és a bekezdés-indexek
 
@@ -275,7 +372,8 @@ könnyen átalakítható, a lényeg, hogy a beérkező válaszokból végül egy
 - Minden `resolve_*` függvény UGYANAZT a bekezdés-listát (`p`) kapja meg,
   amit a `generate()` egyszer, a legelején olvas ki a dokumentumból. Ez
   szándékos: törlés után a `doc.paragraphs` újraolvasása elcsúsztatná a
-  többi indexet.
+  többi indexet. A táblázatokkal dolgozó `resolve_*` függvények ugyanígy
+  megkapják az egyszer kiolvasott táblázatlistát (`t`) is.
 - **Ág-választáshoz mindig az `answer(a, kulcs, alapertelmezes)` segédet
   használd**, ne a nyers `a.get(...)` / `a.kulcs || ...` alakot. Az
   iroda-oldalon a kitöltetlen select ÜRES SZTRINGKÉNT érkezik, nem hiányzó
@@ -283,6 +381,14 @@ könnyen átalakítható, a lényeg, hogy a beérkező válaszokból végül egy
   viszont az üres sztringet - ez korábban a két motor eltérő kimenetét
   okozta. Az `answer()` a hiányzó és az üres mezőt egyformán kezeli, és
   mindkét motorban bitre azonos szemantikájú.
+- **A behelyettesítendő értéket mindig a `text_value()` / `textValue()`
+  segéden át kell szöveggé alakítani**, ne nyers `str()` / `String()`
+  hívással. A kettő nem ekvivalens: `str(20.0)` → `"20.0"`, de
+  `String(20.0)` → `"20"` (a JS-ben a `20.0` és a `20` ugyanaz az érték,
+  megkülönböztetni nem lehet őket), és `str(True)` → `"True"`, míg
+  `String(true)` → `"true"`. Az űrlapokról mindig sztring érkezik, ez a
+  segéd a kézzel írt vagy programmal generált `answers.json`-ok szám- és
+  logikai értékeit teszi biztonságossá.
 - Ugyanez a csapda a dátum-segédben: a Python `datetime.date` hibás
   hónapra/napra kivételt dob, a JS `Date` viszont csendben túlcsordul
   (2024. 13. hó -> 2025. január). Az `illustrativeDate()` ezért kézzel

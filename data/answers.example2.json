@@ -1,6 +1,21 @@
 {
   "_leiras": "Második, ellentétes ágakat gyakorló minta-válaszkészlet (teszteléshez).",
 
+  "szv1": "Ellenpélda Ipari Zrt.",
+  "szv2": "9700 Szombathely, Fő tér 2.",
+  "szv5": "Szabó Anna cégvezető",
+  "szv6": "87654321-2-18",
+  "cegjegyzekszam": "18-10-654321",
+
+  "bizonylat_hitelesites_tipus": "kepviselo_alairasa",
+  "szv52": "",
+  "szv53": "",
+
+  "szv75": "",
+  "szv76": "",
+  "szv84": "",
+  "szv87": "",
+
   "penznem_tipus": "usd",
   "penznem_atteres_datum": "2023. január 1.",
   "penznem_egyeb_neve": "",
