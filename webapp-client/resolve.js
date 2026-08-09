@@ -17,7 +17,8 @@ function resolveNyelv(p, a, xmlDoc) {
 }
 
 function resolvePenznem(p, a, xmlDoc) {
-  const tipus = answer(a, 'penznem_tipus', 'forint');
+  const raw = answer(a, 'penznem_tipus', 'forint');
+  const tipus = classifyPenznem(raw);
   if (tipus === 'forint') {
     keepP(p[616], xmlDoc);
     for (const i of [618, 620, 622, 624, 625, 627, 629, 631]) deleteP(p[i]);
@@ -38,7 +39,12 @@ function resolvePenznem(p, a, xmlDoc) {
     deleteP(p[629]);
     deleteP(p[631]);
   } else {
-    fillBlanks(p[631], [a.penznem_egyeb_neve || ''], xmlDoc);
+    let nev = (a.penznem_egyeb_neve || '').trim();
+    if (!nev) {
+      const rawNorm = deaccent(raw.trim().toLowerCase()).replace(/_/g, ' ');
+      if (raw.trim() && !PENZNEM_EGYEB_PLACEHOLDERS.has(rawNorm)) nev = raw.trim();
+    }
+    fillBlanks(p[631], [nev], xmlDoc);
     for (const i of [616, 618, 620, 622, 624, 625, 627, 629]) deleteP(p[i]);
   }
   keepP(p[633], xmlDoc);

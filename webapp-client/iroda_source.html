@@ -343,8 +343,11 @@ function fieldHtml(q) {
   }
   let input;
   if (q.tipus === "select") {
-    const opts = q.opciok.map(o => `<option value="${o}">${humanize(o)}</option>`).join("");
+    const opts = q.opciok.map((o, i) => `<option value="${o}">${(q.cimkek ? q.cimkek[i] : humanize(o))}</option>`).join("");
     input = `<select id="f_${q.kulcs}" name="${q.kulcs}"><option value="">-- válasszon --</option>${opts}</select>`;
+  } else if (q.tipus === "combo") {
+    const opts = q.opciok.map(o => `<option value="${o}"></option>`).join("");
+    input = `<input type="text" id="f_${q.kulcs}" name="${q.kulcs}" list="dl_${q.kulcs}" autocomplete="off"><datalist id="dl_${q.kulcs}">${opts}</datalist>`;
   } else if (q.tipus === "number") {
     input = `<input type="text" inputmode="numeric" id="f_${q.kulcs}" name="${q.kulcs}">`;
   } else {

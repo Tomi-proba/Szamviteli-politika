@@ -26,6 +26,7 @@ import copy
 import json
 import re
 import sys
+import unicodedata
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -172,6 +173,34 @@ def is_number(value):
         return False
 
 
+def _deaccent(s):
+    return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
+
+
+_PENZNEM_EGYEB_PLACEHOLDERS = {"egyeb", "egyeb deviza", "egyeb devizanem", "mas", "mas deviza"}
+
+
+def classify_penznem(raw):
+    """A szabadon gépelhető pénznem-mező (Szv#12) besorolása.
+
+    A mezőt korábban zárt select-ként kérdeztük (forint/euro/usd/egyeb_deviza),
+    az ügyfél viszont bármit begépelhet (pl. "Forint", "Euró", "GBP"). Ékezet-
+    és kis/nagybetű-független illesztést végzünk a három ismert devizára, minden
+    más gépelt szöveget "egyeb"-ként kezelünk.
+
+    FIGYELEM: a resolve.js `classifyPenznem()` PONTOS párja kell legyen.
+    """
+    t = (raw or "").strip()
+    tl = _deaccent(t.lower())
+    if tl in ("", "forint", "huf"):
+        return "forint"
+    if tl in ("euro", "eur"):
+        return "euro"
+    if tl in ("usd", "dollar", "us dollar", "amerikai dollar"):
+        return "usd"
+    return "egyeb"
+
+
 def answer(a, key, default=""):
     """Egy válasz kiolvasása ág-választáshoz.
 
@@ -219,7 +248,8 @@ def resolve_nyelv(p, a):
 
 
 def resolve_penznem(p, a):
-    tipus = answer(a, "penznem_tipus", "forint")
+    raw = answer(a, "penznem_tipus", "forint")
+    tipus = classify_penznem(raw)
     if tipus == "forint":
         keep(p[616])
         for i in (618, 620, 622, 624, 625, 627, 629, 631):
@@ -239,8 +269,13 @@ def resolve_penznem(p, a):
         delete(p[618])
         delete(p[629])
         delete(p[631])
-    else:  # egyeb_deviza
-        fill_blanks(p[631], [a.get("penznem_egyeb_neve", "")])
+    else:  # egyeb deviza - szabadon gépelt devizanév
+        nev = (a.get("penznem_egyeb_neve") or "").strip()
+        if not nev:
+            raw_norm = _deaccent(raw.strip().lower()).replace("_", " ")
+            if raw.strip() and raw_norm not in _PENZNEM_EGYEB_PLACEHOLDERS:
+                nev = raw.strip()
+        fill_blanks(p[631], [nev])
         for i in (616, 618, 620, 622, 624, 625, 627, 629):
             delete(p[i])
     keep(p[633])

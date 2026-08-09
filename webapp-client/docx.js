@@ -211,6 +211,23 @@ function answer(a, key, def_) {
   return value;
 }
 
+const PENZNEM_EGYEB_PLACEHOLDERS = new Set(['egyeb', 'egyeb deviza', 'egyeb devizanem', 'mas', 'mas deviza']);
+
+function deaccent(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// A generate_policy.py classify_penznem() PONTOS párja - lásd ott a
+// magyarázatot (szabadon gépelt Szv#12 pénznem-mező besorolása).
+function classifyPenznem(raw) {
+  const t = (raw || '').trim();
+  const tl = deaccent(t.toLowerCase());
+  if (tl === '' || tl === 'forint' || tl === 'huf') return 'forint';
+  if (tl === 'euro' || tl === 'eur') return 'euro';
+  if (tl === 'usd' || tl === 'dollar' || tl === 'us dollar' || tl === 'amerikai dollar') return 'usd';
+  return 'egyeb';
+}
+
 function illustrativeDate(fordulonapHonap, fordulonapNap, offsetDays) {
   // A generate_policy.py illustrative_date() PONTOS tükörképe. Fontos: a
   // Python datetime.date szigorúan validál (hónap 1-12, a hónapban létező

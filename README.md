@@ -124,9 +124,9 @@ választó-kérdéssel.
 
 | | darab |
 |---|---|
-| kérdés összesen a `questions.json`-ban | **150** |
+| kérdés összesen a `questions.json`-ban | **151** |
 | ebből a motor automatikusan behelyettesíti / ág-választásra használja | **64** |
-| ebből jelenleg nincs kitöltendő helye a sablonban (`_nincs_sablonhely`) | **86** |
+| ebből jelenleg nincs kitöltendő helye a sablonban (`_nincs_sablonhely`) | **87** |
 | lefedett *forrás*-kérdés (Szv#/Ért# szám szerint) | **35** |
 | `resolve_*` függvény (Python és JS oldalon egyaránt) | **27** |
 
@@ -136,7 +136,7 @@ A bekötött forráskérdések: Szv#12, 13, 14, 15, 16, 17, 18, 19, 21, 25/28,
 egyben az Ért#5 által is jelölt döntési pontot oldja fel – ugyanaz a
 bekezdés-csoport.)
 
-A fennmaradó ~86 kérdés (cégadatok, könyvelési gyakorlat részletei,
+A fennmaradó ~87 kérdés (cégadatok, könyvelési gyakorlat részletei,
 eszközértékelési szabályok stb.) az űrlapon megjelenik és a válasz
 összegyűjtésre kerül (az ügyfél kódjában, majd az iroda oldalon), de a
 motor **nem helyettesíti be automatikusan semmilyen bekezdésbe** – ezeket a
