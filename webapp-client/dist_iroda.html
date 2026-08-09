@@ -221,6 +221,10 @@
   }
   .import-box button:hover { background: var(--paper-raised); }
   .import-box .import-status { font-size: 0.85rem; color: var(--ink-muted); }
+  .import-box .code-details { margin-top: 0.9rem; }
+  .import-box .code-details summary { cursor: pointer; color: var(--ink-muted); font-size: 0.85rem; }
+  .import-box .code-details textarea { margin-top: 0.6rem; }
+  .import-box .code-details button { margin-top: 0.6rem; }
 </style>
 </head>
 <body>
@@ -254,14 +258,20 @@
   </header>
 
   <div class="import-box">
-    <h2>Ügyfélkód beillesztése</h2>
-    <p>Az ügyfél kérdőívének végén kapott kódot illeszd be ide - a kék (ügyféltől
-       kérdezendő) mezők automatikusan kitöltődnek belőle.</p>
-    <textarea id="importCode" placeholder="Ide illeszd be a kódot..."></textarea>
+    <h2>Ügyfél válaszainak betöltése</h2>
+    <p>Töltsd be az ügyféltől kapott fájlt (pl. a közös meghajtóról), vagy
+       illeszd be a kódot - a kék (ügyféltől kérdezendő) mezők automatikusan
+       kitöltődnek belőle.</p>
     <div class="row">
-      <button type="button" id="importBtn">Beolvasás</button>
+      <button type="button" id="importFileBtn">Fájl megnyitása...</button>
+      <input type="file" id="importFile" accept=".txt,.json" hidden>
       <span class="import-status" id="importStatus"></span>
     </div>
+    <details class="code-details">
+      <summary>...vagy a kód beillesztése</summary>
+      <textarea id="importCode" placeholder="Ide illeszd be a kódot..."></textarea>
+      <button type="button" id="importBtn">Beolvasás</button>
+    </details>
   </div>
 
   <nav class="toc" id="toc"></nav>
@@ -273,14 +283,6 @@
     </div>
     <div id="status"></div>
   </form>
-
-  <p class="foot-note">
-    <strong>Amit ez a verzió nem fed le:</strong> a sablon jóval több döntési pontot
-    (elsősorban a VIII. fejezet eszközértékelési politikáját) tartalmaz, mint amennyit
-    ez a kérdőív lefed &ndash; ezek a vázlatban változatlanul, kitöltésre várva maradnak.
-    Forráskód és a teljes háttér-dokumentáció: a <code>Tomi-proba/Szamviteli-politika</code>
-    GitHub-repóban.
-  </p>
 </div>
 
 <script>
@@ -1591,11 +1593,10 @@ function decodeAnswersCode(code) {
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 
-document.getElementById("importBtn").addEventListener("click", () => {
-  const raw = document.getElementById("importCode").value;
+function importCode(raw, sourceLabel) {
   const statusEl = document.getElementById("importStatus");
-  if (!raw.trim()) {
-    statusEl.textContent = "Nincs beillesztett kód.";
+  if (!raw || !raw.trim()) {
+    statusEl.textContent = "Nincs beolvasható tartalom.";
     return;
   }
   try {
@@ -1606,10 +1607,30 @@ document.getElementById("importBtn").addEventListener("click", () => {
       if (el) { el.value = value; filled++; }
     }
     applyVisibility();
-    statusEl.textContent = `${filled} mező kitöltve az ügyfél válaszaiból.`;
+    statusEl.textContent = `${filled} mező kitöltve az ügyfél válaszaiból${sourceLabel ? ` (${sourceLabel})` : ""}.`;
   } catch (e) {
-    statusEl.textContent = "A kód nem olvasható be - kérd meg az ügyfelet, hogy küldje el újra.";
+    statusEl.textContent = "A fájl/kód nem olvasható be - kérd meg az ügyfelet, hogy küldje el újra.";
   }
+}
+
+document.getElementById("importBtn").addEventListener("click", () => {
+  importCode(document.getElementById("importCode").value);
+});
+
+document.getElementById("importFileBtn").addEventListener("click", () => {
+  document.getElementById("importFile").click();
+});
+
+document.getElementById("importFile").addEventListener("change", (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => importCode(String(reader.result), file.name);
+  reader.onerror = () => {
+    document.getElementById("importStatus").textContent = "A fájl nem olvasható.";
+  };
+  reader.readAsText(file, "utf-8");
+  ev.target.value = "";
 });
 
 /* ====================== BELÉPŐ KAPU ====================== */

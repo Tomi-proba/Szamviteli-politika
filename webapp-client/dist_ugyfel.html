@@ -126,6 +126,9 @@
   .btn-primary:hover { background: var(--accent-ink); }
   .btn-secondary { background: transparent; color: var(--accent-ink); border: 1px solid var(--accent) !important; }
   .btn-secondary:hover { background: var(--accent-soft); }
+  .code-details { margin-top: 1rem; }
+  .code-details summary { cursor: pointer; color: var(--ink-muted); font-size: 0.88rem; margin-bottom: 0.6rem; }
+  .code-details .code-box { margin-top: 0.6rem; }
 
   .field.missing input, .field.missing select {
     border-color: var(--flag); box-shadow: 0 0 0 2px var(--flag-soft);
@@ -188,14 +191,20 @@
     <div class="done-card">
       <h2>Köszönjük a válaszokat!</h2>
       <p>
-        Kérjük, küldjék el az alábbi kódot e-mailben könyvelőjüknek/a
-        számviteli irodának - ez tartalmazza az összes megadott választ.
+        Töltsék le az alábbi fájlt, és juttassák el a számviteli irodának
+        (pl. mentsék el a közös meghajtóra) - ez tartalmazza az összes
+        megadott választ. Ha egyszerűbb, e-mailben is elküldhetik, vagy a
+        kódot kimásolhatják.
       </p>
-      <textarea class="code-box" id="codeBox" readonly></textarea>
       <div class="done-actions">
-        <a href="#" class="btn-primary" id="mailtoBtn">Küldés e-mailben</a>
-        <button type="button" class="btn-secondary" id="copyBtn">Kód másolása</button>
+        <button type="button" class="btn-primary" id="saveFileBtn">Mentés fájlba</button>
+        <a href="#" class="btn-secondary" id="mailtoBtn">Küldés e-mailben</a>
       </div>
+      <details class="code-details">
+        <summary>...vagy a kód kimásolása</summary>
+        <textarea class="code-box" id="codeBox" readonly></textarea>
+        <button type="button" class="btn-secondary" id="copyBtn">Kód másolása</button>
+      </details>
     </div>
   </div>
 </div>
@@ -383,11 +392,37 @@ function hideConfirmModal() {
   document.getElementById("confirmModal").classList.add("hidden");
 }
 
+let lastCode = "";
+
+// Fájlnév a cégnév (szv1) és a mai dátum alapján, hogy a közös meghajtón
+// könnyen megkülönböztethetők legyenek a különböző cégek mentett válaszai.
+function answersFileName(answers) {
+  const nev = (answers.szv1 || "").trim();
+  const slug = nev
+    ? nev.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_+|_+$/g, "")
+    : "valaszok";
+  const today = new Date().toISOString().slice(0, 10);
+  return `szamviteli_politika_${slug || "valaszok"}_${today}.txt`;
+}
+
 function finalizeSubmit() {
   clearMissingMarks();
   const answers = collectAnswers();
   const code = encodeAnswersCode(answers);
+  lastCode = code;
   document.getElementById("codeBox").value = code;
+
+  document.getElementById("saveFileBtn").onclick = () => {
+    const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = answersFileName(answers);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
 
   const subject = encodeURIComponent("Számviteli politika - kérdőív válaszok");
   const body = encodeURIComponent(
