@@ -98,6 +98,21 @@ Ha az irodának saját, fix e-mail címe van, ahova a kódot kéritek, írd be a
 `ugyfel_source.html` `OFFICE_EMAIL` konstansába, majd futtasd újra a
 `build.py`-t - így a "Küldés e-mailben" gomb már eleve ki lesz címezve.
 
+Mindhárom fájlformátum (ügyfél félbehagyott mentése, ügyfél véglegesített
+mentése, iroda mentése) **azonos** - ugyanaz a base64-kódolt JSON, csak
+fájlba írva a kód-másolgatás helyett. Ezért bármelyik ilyen fájl bármelyik
+oldalon visszatölthető:
+
+- **Ügyfél-oldal**: a "Mentés és folytatás később" gomb bármikor (akár
+  félbehagyott kitöltésnél is) fájlba menti az aktuális válaszokat; a lap
+  tetején a "Korábbi mentés megnyitása..." ezt tölti vissza, hogy onnan
+  folytatható legyen a kitöltés.
+- **Iroda-oldal**: a "Válaszok mentése fájlba" gomb az aktuális állapotot
+  menti (az ügyféltől importált ÉS az iroda által azóta kitöltött mezőket
+  is) - így megszakítható/átadható a munka kollégák között, és mivel a
+  fájlnév cégnév+dátum alapján generálódik, egy közös mappában több cég
+  mentése is jól megkülönböztethető.
+
 Parancssorból (JSON válaszfájlból), ha nem a webes űrlapot használod:
 
 ```bash

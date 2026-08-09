@@ -91,7 +91,26 @@
 
   .field.hidden { display: none; }
 
-  .submit-bar { display: flex; justify-content: flex-end; margin-top: 1.6rem; }
+  .resume-box {
+    background: var(--accent-soft); border: 1px solid var(--line); border-radius: 10px;
+    padding: 1.1rem 1.4rem; margin-bottom: 1.4rem; display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+  .resume-box p { margin: 0; color: var(--ink-muted); font-size: 0.87rem; }
+  .resume-box .row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+  .resume-box button {
+    font-family: var(--sans); font-weight: 600; font-size: 0.88rem; color: var(--accent-ink);
+    background: transparent; border: 1px solid var(--accent); border-radius: 6px; padding: 0.5rem 1rem; cursor: pointer;
+  }
+  .resume-box button:hover { background: var(--paper-raised); }
+  .resume-box .import-status { font-size: 0.85rem; color: var(--ink-muted); }
+
+  .submit-bar { display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem; margin-top: 1.6rem; flex-wrap: wrap; }
+  button#saveProgressBtn {
+    font-family: var(--sans); font-weight: 600; font-size: 0.9rem; color: var(--accent-ink);
+    background: transparent; border: 1px solid var(--accent); border-radius: 8px; padding: 0.8rem 1.3rem; cursor: pointer;
+  }
+  button#saveProgressBtn:hover { background: var(--accent-soft); }
   button#submitBtn {
     font-family: var(--sans); font-weight: 600; font-size: 0.98rem; color: #fff;
     background: var(--accent); border: none; border-radius: 8px; padding: 0.85rem 1.6rem;
@@ -103,6 +122,7 @@
   #status { margin-top: 0.9rem; padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.9rem; display: none; }
   #status.show { display: block; }
   #status.err { background: var(--flag-soft); color: var(--flag); }
+  #status.ok { background: var(--accent-soft); color: var(--accent-ink); }
 
   #done { display: none; }
   #done.show { display: block; }
@@ -179,9 +199,20 @@
     </p>
   </header>
 
+  <div class="resume-box">
+    <p>Korábban elkezdte és elmentette a kitöltést? Töltse be a mentett
+       fájlt, és onnan folytathatja.</p>
+    <div class="row">
+      <button type="button" id="resumeFileBtn">Korábbi mentés megnyitása...</button>
+      <input type="file" id="resumeFile" accept=".txt,.json" hidden>
+      <span class="import-status" id="resumeStatus"></span>
+    </div>
+  </div>
+
   <form id="policyForm">
     <div id="groups"></div>
     <div class="submit-bar">
+      <button type="button" id="saveProgressBtn">Mentés és folytatás később</button>
       <button type="submit" id="submitBtn">Kérdőív véglegesítése</button>
     </div>
     <div id="status"></div>
@@ -314,12 +345,19 @@ function applyVisibility() {
   });
 }
 
-/* ====================== KÓD KÓDOLÁS ====================== */
+/* ====================== KÓD KÓDOLÁS/DEKÓDOLÁS ====================== */
 function encodeAnswersCode(answers) {
   const bytes = new TextEncoder().encode(JSON.stringify(answers));
   let binary = "";
   for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
   return btoa(binary);
+}
+
+function decodeAnswersCode(code) {
+  const binary = atob(code.trim());
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
 function collectAnswers() {
@@ -329,6 +367,16 @@ function collectAnswers() {
     answers[q.kulcs] = el ? el.value : "";
   }
   return answers;
+}
+
+function applyAnswers(answers) {
+  let filled = 0;
+  for (const [key, value] of Object.entries(answers)) {
+    const el = document.querySelector(`[name="${key}"]`);
+    if (el) { el.value = value; filled++; }
+  }
+  applyVisibility();
+  return filled;
 }
 
 // Ha az iroda saját e-mail címét be szeretnéd égetni a "Küldés e-mailben"
@@ -405,6 +453,55 @@ function answersFileName(answers) {
   return `szamviteli_politika_${slug || "valaszok"}_${today}.txt`;
 }
 
+// Az aktuális (akár részleges) válaszokat fájlba menti - ugyanaz a formátum
+// van kitöltéskor félbehagyott mentésnél és a véglegesített kérdőívnél is,
+// tehát egy ilyen fájl bármikor visszatölthető (ld. "resumeFile" fent) vagy
+// az iroda-oldalon is beolvasható.
+function downloadAnswersFile(answers) {
+  const code = encodeAnswersCode(answers);
+  const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = answersFileName(answers);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  return code;
+}
+
+document.getElementById("saveProgressBtn").addEventListener("click", () => {
+  const answers = collectAnswers();
+  downloadAnswersFile(answers);
+  const statusEl = document.getElementById("status");
+  statusEl.textContent = "Mentve - a letöltött fájlból bármikor folytathatja (ld. \"Korábbi mentés megnyitása\" fent).";
+  statusEl.className = "show ok";
+});
+
+document.getElementById("resumeFileBtn").addEventListener("click", () => {
+  document.getElementById("resumeFile").click();
+});
+
+document.getElementById("resumeFile").addEventListener("change", (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById("resumeStatus");
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const answers = decodeAnswersCode(String(reader.result));
+      const filled = applyAnswers(answers);
+      statusEl.textContent = `${filled} válasz betöltve.`;
+    } catch (e) {
+      statusEl.textContent = "A fájl nem olvasható be.";
+    }
+  };
+  reader.onerror = () => { statusEl.textContent = "A fájl nem olvasható."; };
+  reader.readAsText(file, "utf-8");
+  ev.target.value = "";
+});
+
 function finalizeSubmit() {
   clearMissingMarks();
   const answers = collectAnswers();
@@ -412,17 +509,7 @@ function finalizeSubmit() {
   lastCode = code;
   document.getElementById("codeBox").value = code;
 
-  document.getElementById("saveFileBtn").onclick = () => {
-    const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = answersFileName(answers);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  };
+  document.getElementById("saveFileBtn").onclick = () => downloadAnswersFile(answers);
 
   const subject = encodeURIComponent("Számviteli politika - kérdőív válaszok");
   const body = encodeURIComponent(

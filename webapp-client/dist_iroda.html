@@ -154,8 +154,13 @@
   .field.hidden { display: none; }
 
   .submit-bar {
-    display: flex; justify-content: flex-end; margin-top: 1.6rem;
+    display: flex; justify-content: flex-end; align-items: center; gap: 0.8rem; margin-top: 1.6rem; flex-wrap: wrap;
   }
+  button#saveAnswersBtn {
+    font-family: var(--sans); font-weight: 600; font-size: 0.9rem; color: var(--accent-ink);
+    background: transparent; border: 1px solid var(--accent); border-radius: 8px; padding: 0.8rem 1.3rem; cursor: pointer;
+  }
+  button#saveAnswersBtn:hover { background: var(--accent-soft); }
   button#submitBtn {
     font-family: var(--sans); font-weight: 600; font-size: 0.98rem; color: #fff;
     background: var(--accent); border: none; border-radius: 8px; padding: 0.85rem 1.6rem;
@@ -279,6 +284,7 @@
   <form id="policyForm">
     <div id="groups"></div>
     <div class="submit-bar">
+      <button type="button" id="saveAnswersBtn">Válaszok mentése fájlba</button>
       <button type="submit" id="submitBtn">Vázlat legenerálása</button>
     </div>
     <div id="status"></div>
@@ -1586,12 +1592,52 @@ applyVisibility();
 document.addEventListener("change", applyVisibility);
 
 /* ====================== KÓD KÓDOLÁS/DEKÓDOLÁS ====================== */
+function encodeAnswersCode(answers) {
+  const bytes = new TextEncoder().encode(JSON.stringify(answers));
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
 function decodeAnswersCode(code) {
   const binary = atob(code.trim());
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return JSON.parse(new TextDecoder().decode(bytes));
 }
+
+// Fájlnév a cégnév (szv1) és a mai dátum alapján - ugyanaz a séma, mint az
+// ügyfél-oldalon, hogy a közös meghajtón egyértelmű legyen, melyik cégé.
+function answersFileName(answers) {
+  const nev = (answers.szv1 || "").trim();
+  const slug = nev
+    ? nev.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_+|_+$/g, "")
+    : "valaszok";
+  const today = new Date().toISOString().slice(0, 10);
+  return `szamviteli_politika_${slug || "valaszok"}_${today}.txt`;
+}
+
+// A jelenlegi (ügyféltől importált + iroda által kitöltött) összes választ
+// menti fájlba - ugyanaz a formátum, mint az ügyfél-oldal mentése/kódja,
+// tehát ez a fájl később bármelyik oldalon visszatölthető.
+function downloadAnswersFile(answers) {
+  const code = encodeAnswersCode(answers);
+  const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = answersFileName(answers);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+document.getElementById("saveAnswersBtn").addEventListener("click", () => {
+  downloadAnswersFile(collectAnswers());
+  const statusEl = document.getElementById("importStatus");
+  statusEl.textContent = "A jelenlegi válaszok elmentve fájlba.";
+});
 
 function importCode(raw, sourceLabel) {
   const statusEl = document.getElementById("importStatus");
