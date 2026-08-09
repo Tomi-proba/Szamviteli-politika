@@ -81,27 +81,34 @@ output/                      <- ide kerülnek a Python scripttel legenerált vá
 
 ### A válaszok átadásának működése
 
-Az ügyfél-oldal a válaszokat egy base64-be kódolt JSON-ná ("kód") alakítja.
-Ezt háromféleképp lehet eljuttatni az irodához:
+Az ügyfél-oldal a válaszokat vagy egy **olvasható fájlba** menti, vagy - ha
+valaki mégis a kódot választja - egy base64-be kódolt JSON-ná ("kód")
+alakítja. Az irodához háromféleképp lehet eljuttatni:
 
-- **Mentés fájlba** (ajánlott) - az ügyfél letölt egy `.txt` fájlt (a
-  cégnév + dátum alapján elnevezve), amit pl. a közös hálózati
-  meghajtóra tud menteni. Az iroda-oldalon a "Fájl megnyitása..." gombbal
-  tallózható be - nincs kód-másolgatás/beillesztés.
+- **Mentés fájlba** (ajánlott) - egy `.txt` fájlt tölt le (a cégnév +
+  dátum alapján elnevezve), amit pl. a közös hálózati meghajtóra lehet
+  menteni. Megnyitva a fájl elején rögtön olvasható, ember számára
+  értelmezhető formában látszik minden kérdés és a rá adott válasz - a
+  fájl végén egy géppel olvasható JSON-blokk (a `<<<ADATOK...>>>` jelző
+  után) teszi lehetővé a visszatöltést, ezt nem kell/nem szabad
+  szerkeszteni. Az iroda-oldalon a "Fájl megnyitása..." gombbal tallózható
+  be - nincs kód-másolgatás/beillesztés.
 - E-mailben (a "Küldés e-mailben" gomb egy előre kitöltött e-mailt nyit meg
   a kóddal).
 - A kód kimásolásával/beillesztésével (mindkét oldalon egy lenyitható
   "...vagy a kód" részben érhető el, ha valaki mégis ezt az utat választja).
 
-Mindhárom út ugyanahhoz a dekódoláshoz/előtöltéshez vezet az iroda-oldalon.
-Ha az irodának saját, fix e-mail címe van, ahova a kódot kéritek, írd be az
-`ugyfel_source.html` `OFFICE_EMAIL` konstansába, majd futtasd újra a
-`build.py`-t - így a "Küldés e-mailben" gomb már eleve ki lesz címezve.
+Mindhárom út ugyanahhoz az előtöltéshez vezet az iroda-oldalon - a
+betöltő függvény (`parseAnswersFileText`) az olvasható fájlformátumot, a
+régebbi sima JSON-mentést és a base64 "kódot" is felismeri, tehát egy
+korábban mentett fájl is visszatölthető marad. Ha az irodának saját, fix
+e-mail címe van, ahova a kódot kéritek, írd be az `ugyfel_source.html`
+`OFFICE_EMAIL` konstansába, majd futtasd újra a `build.py`-t - így a
+"Küldés e-mailben" gomb már eleve ki lesz címezve.
 
-Mindhárom fájlformátum (ügyfél félbehagyott mentése, ügyfél véglegesített
-mentése, iroda mentése) **azonos** - ugyanaz a base64-kódolt JSON, csak
-fájlba írva a kód-másolgatás helyett. Ezért bármelyik ilyen fájl bármelyik
-oldalon visszatölthető:
+Mindhárom mentési pont (ügyfél félbehagyott mentése, ügyfél véglegesített
+mentése, iroda mentése) **azonos fájlformátumot ír** - ezért bármelyik
+ilyen fájl bármelyik oldalon visszatölthető:
 
 - **Ügyfél-oldal**: a "Mentés és folytatás később" gomb bármikor (akár
   félbehagyott kitöltésnél is) fájlba menti az aktuális válaszokat; a lap

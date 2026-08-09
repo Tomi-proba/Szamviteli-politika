@@ -1592,6 +1592,8 @@ applyVisibility();
 document.addEventListener("change", applyVisibility);
 
 /* ====================== KÓD KÓDOLÁS/DEKÓDOLÁS ====================== */
+// A "kód" (e-mailes/kimásolós átadáshoz) base64-be csomagolt JSON - ez marad
+// változatlan, mert e-mailbe/szövegmezőbe illesztve ez a megbízható forma.
 function encodeAnswersCode(answers) {
   const bytes = new TextEncoder().encode(JSON.stringify(answers));
   let binary = "";
@@ -1606,6 +1608,52 @@ function decodeAnswersCode(code) {
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 
+// A FÁJLBA mentésnél nem kód kell, hanem hogy aki megnyitja a fájlt, egyből
+// lássa a kérdéseket és a rá adott válaszokat - PONTOSAN ugyanaz a formátum,
+// mint az ügyfél-oldal mentése, hogy a fájlok bármelyik oldalon
+// visszatölthetők legyenek. A fájl végén egy géppel olvasható JSON-blokk is
+// szerepel (a <<<ADATOK>>> jelző után), ezt nem kell szerkeszteni.
+const ADATBLOKK_JELZO = "<<<ADATOK - NE MÓDOSÍTSA, EZT OLVASSA BE A RENDSZER>>>";
+
+function buildAnswersFileText(answers) {
+  const nev = (answers.szv1 || "").trim();
+  const lines = [];
+  lines.push("SZÁMVITELI POLITIKA - KÉRDŐÍV VÁLASZOK");
+  if (nev) lines.push(`Cég: ${nev}`);
+  lines.push(`Mentve: ${new Date().toLocaleString("hu-HU")}`);
+  lines.push("");
+  for (const q of QUESTIONS) {
+    const val = (answers[q.kulcs] || "").toString().trim();
+    if (!val) continue;
+    lines.push(`${q.eredeti} · ${q.kerdes}`);
+    lines.push(`  ${val}`);
+    lines.push("");
+  }
+  lines.push("=".repeat(60));
+  lines.push("Az alábbi rész a rendszer számára készült - ne törölje, ha");
+  lines.push("vissza szeretné tölteni ezt a fájlt.");
+  lines.push("=".repeat(60));
+  lines.push(ADATBLOKK_JELZO);
+  lines.push(JSON.stringify(answers));
+  return lines.join("\n");
+}
+
+// Elfogadja az új, olvasható fájlformátumot (a <<<ADATOK>>> blokkot dolgozza
+// fel), a régebbi sima JSON-mentést, és a base64 "kódot" is (pl. ha valaki
+// egy e-mailben kapott kódot ment fájlba, vagy egy régi mentést tölt be).
+function parseAnswersFileText(raw) {
+  const text = raw.trim();
+  const marker = text.lastIndexOf(ADATBLOKK_JELZO);
+  if (marker !== -1) {
+    return JSON.parse(text.slice(marker + ADATBLOKK_JELZO.length).trim());
+  }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return decodeAnswersCode(text);
+  }
+}
+
 // Fájlnév a cégnév (szv1) és a mai dátum alapján - ugyanaz a séma, mint az
 // ügyfél-oldalon, hogy a közös meghajtón egyértelmű legyen, melyik cégé.
 function answersFileName(answers) {
@@ -1618,11 +1666,11 @@ function answersFileName(answers) {
 }
 
 // A jelenlegi (ügyféltől importált + iroda által kitöltött) összes választ
-// menti fájlba - ugyanaz a formátum, mint az ügyfél-oldal mentése/kódja,
+// menti fájlba - ugyanaz a formátum, mint az ügyfél-oldal mentése,
 // tehát ez a fájl később bármelyik oldalon visszatölthető.
 function downloadAnswersFile(answers) {
-  const code = encodeAnswersCode(answers);
-  const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+  const text = buildAnswersFileText(answers);
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -1646,7 +1694,7 @@ function importCode(raw, sourceLabel) {
     return;
   }
   try {
-    const answers = decodeAnswersCode(raw);
+    const answers = parseAnswersFileText(raw);
     let filled = 0;
     for (const [key, value] of Object.entries(answers)) {
       const el = document.querySelector(`[name="${key}"]`);
