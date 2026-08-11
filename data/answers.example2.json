@@ -1,110 +1,84 @@
 {
   "_leiras": "Második, ellentétes ágakat gyakorló minta-válaszkészlet (teszteléshez).",
-
   "szv1": "Ellenpélda Ipari Zrt.",
   "szv2": "9700 Szombathely, Fő tér 2.",
   "szv5": "Szabó Anna cégvezető",
   "szv6": "87654321-2-18",
   "cegjegyzekszam": "18-10-654321",
-
   "bizonylat_hitelesites_tipus": "kepviselo_alairasa",
   "szv52": "",
   "szv53": "",
-
   "szv75": "",
   "szv76": "",
   "szv84": "",
   "szv87": "",
-
   "penznem_tipus": "usd",
   "penznem_atteres_datum": "2023. január 1.",
   "penznem_egyeb_neve": "",
-
   "onkoltsegszamitasi_szabalyzat": "van_szabalyzat",
-
   "szv13": "egyszerusitett_eves_beszamolo",
   "szv14": "b_valtozat",
   "szv15": "forgalmi_koltseg_eljarassal",
-
   "van_idegen_nyelvu_beszamolo": "nem",
   "idegen_nyelv": "",
-
   "merlegkeszites_nap": "60",
   "merlegkeszites_van_kivetel": "igen",
   "merlegkeszites_kivetelek": "készletek: 45 nap, követelések: 30 nap",
-
   "fordulonap_honap": "6",
   "fordulonap_nap": "30",
-
   "beszamolo_alairoja": "Szabó Anna cégvezető",
-
   "letetbehelyezes_hatarido_tipus": "szabalyozott_piac",
   "penzkezeles_felelos_tipus": "penzkezelesi_szabalyzat_szerint",
-
   "konyvvizsgalat_tipus": "onkentes",
   "konyvvizsgalo_adatai": "Audit Kft., 1051 Budapest, Fő u. 1., kamarai szám: 001234, felelős: Tóth Béla, kamarai szám: 005678, megbízás: 3 év",
   "fenntarthatosagi_jelentes": "igen_mas_konyvvizsgalo",
-
   "ertekeles_felelos_tipus": "egyedi_delegalas",
   "ertekelesi_delegalas": "az értékelési feladatokat a pénzügyi vezető végzi, teljes felelősséggel",
-
   "konyveles_felelos_tipus": "oklev_konyvvizsgalo",
-  "konyveles_felelos_nev_regszam": "Kiss Péter, okleveles könyvvizsgáló, reg. szám: 987654",
   "konyvvezetesert_felelos_szemely": "Kiss Péter",
-
   "beszamolo_honlapon": "igen",
   "beszamolo_honlap_cim": "https://example-cegunk.hu/beszamolo",
-
   "konszolidacio_tipus": "anya_keszit_konszolidaltat",
   "konszolidacio_reszletszabalyok": "a leányvállalatok havi adatszolgáltatást teljesítenek a csoport riportcsomag szerint",
-
   "leltar_felelos_tipus": "egyedi_delegalas",
   "leltar_delegalas_reszletek": "a raktárvezető felel a készletleltárért, a pénzügyi vezető az egyéb eszközökért",
-
   "jelentos_osszeg_bemutatas": "1000",
   "jelentos_osszeg_ertelmezes": "1000",
-
   "jelentos_mertek_hanyad": "15",
-
   "kiveteles_nagysag_osszeghatar": "20.000",
   "kiveteles_nagysag_sajattoke_szazalek": "15",
   "kiveteles_nagysag_bevetel_szazalek": "12",
   "kiveteles_nagysag_koltseg_szazalek": "12",
-
   "konyvelo_program": "SAP Business One",
   "koltsegelszamolas_tipus": "67_elsodleges",
-
   "bizonylat_konyveles_osszhang": "elektronikus, automatikus kontírozással",
-
   "bizonylatkezeles_szabalyai": "kizárólag elektronikus bizonylatok, digitális archívumban",
-
   "evkozi_zarasok_feladatai": "negyedéves zárás: teljes egyeztetés, céltartalék-felülvizsgálat",
-
   "alapitas_atszervezes_aktivalja": "igen",
   "alapitas_atszervezes_leiras_ev": "3",
-
   "van_cegertek": "igen",
   "cegertek_leiras_ev": "8",
   "van_negativ_cegertek": "igen",
   "negativ_cegertek_leiras_ev": "4",
-
   "ertekhelyesbites_immat_van": "igen",
   "ertekhelyesbites_immat_javak": "vagyoni értékű jogok",
   "ertekhelyesbites_targyi_van": "igen",
   "ertekhelyesbites_targyi_eszkoz": "ingatlanok",
   "ertekhelyesbites_penzugyi_van": "igen",
   "ertekhelyesbites_penzugyi_eszkoz": "tartós részesedések",
-
   "celtartalek_kepez": "igen",
   "celtartalek_jelentos_hatar": "2000",
   "celtartalek_elteres_szazalek": "20",
-
   "kiegeszito_melleklet_sajatossagok": "eladósodottsági mutató, ROE, ROA",
-
   "szerzodes_elszamolasi_egyseg": "alkalmazzuk",
   "ertekpapir_kamatkulonbozet_elhatarolas": "elhataroljuk",
   "arfolyamveszteseg_halasztott_raforditas": "elszamoljuk",
-
   "ert4_alkalmazza_elhatarolas": "igen",
-  "bizomanyi_dij_hatar": "300"
+  "bizomanyi_dij_hatar": "300",
+  "konyveles_felelos_neve": "Kiss Péter",
+  "konyveles_felelos_regszam": "987654",
+  "beszamolo_nyelve": "magyar és angol",
+  "beszamolo_mertekegysege": "millió forint",
+  "leltar_felelos_leiras": "",
+  "szv45": ""
 }

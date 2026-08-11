@@ -117,9 +117,17 @@ function resolveErtekelesiFelelos(p, a, xmlDoc) {
   }
 }
 
+// A generate_policy.py combine_nev_regszam() PONTOS párja.
+function combineNevRegszam(nev, regszam) {
+  nev = (nev || '').trim();
+  regszam = (regszam || '').trim();
+  if (nev && regszam) return `${nev}, nyilvántartási szám: ${regszam}`;
+  return nev || regszam;
+}
+
 function resolveKonyvelesFelelos(p, a, xmlDoc) {
   const tipus = answer(a, 'konyveles_felelos_tipus', 'mentesseg_20mft_arbevetel_alatt');
-  const nev = a.konyveles_felelos_nev_regszam || '';
+  const nev = combineNevRegszam(a.konyveles_felelos_neve, a.konyveles_felelos_regszam);
   if (tipus === 'merlegkepes_konyvelo') {
     fillBlanks(p[313], [nev], xmlDoc);
     keepP(p[312], xmlDoc);

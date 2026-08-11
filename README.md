@@ -157,9 +157,9 @@ választó-kérdéssel.
 
 | | darab |
 |---|---|
-| kérdés összesen a `questions.json`-ban | **152** |
-| ebből a motor automatikusan behelyettesíti / ág-választásra használja | **76** |
-| ebből jelenleg nincs kitöltendő helye a sablonban (`_nincs_sablonhely`) | **76** |
+| kérdés összesen a `questions.json`-ban | **155** |
+| ebből a motor automatikusan behelyettesíti / ág-választásra használja | **77** |
+| ebből jelenleg nincs kitöltendő helye a sablonban (`_nincs_sablonhely`) | **78** |
 | lefedett *forrás*-kérdés (Szv#/Ért# szám szerint) | **46** |
 | `resolve_*` függvény (Python és JS oldalon egyaránt) | **30** |
 
@@ -171,6 +171,16 @@ döntési pontot oldja fel – ugyanaz a bekezdés-csoport.)
 
 Ebből Szv#1, 2, 5, 6, 51, 52, 53, 75, 76, 84 és 87 **táblázatba** kerül –
 ld. a „Táblázatok kezelése” fejezetet lentebb.
+
+Néhány kérdésnél az ügyfél csak leíró jelleggel válaszol (szabad szöveg),
+és egy KÜLÖN, iroda-oldali választó-kérdés dönti el a sablon pontos
+VAGY-ágát - ez a mintázat már korábban is megvolt (pl. könyvvezetésért/
+könyvvizsgálatért felelős típusa), most a leltárkészítés felelősénél is
+ezt követi: `leltar_felelos_leiras` (ügyfél, szabad szöveg, csak
+nyilvántartásra) + `leltar_felelos_tipus` (iroda, választó a 3 sablon-ág
+közül). Hasonlóan, a Szv#45 (költségelszámolás módja) ügyfél-oldali
+kérdése szabad szöveges leírás marad, a tényleges ág-választást a
+`koltsegelszamolas_tipus` iroda-mező végzi.
 
 A fennmaradó ~87 kérdés (cégadatok, könyvelési gyakorlat részletei,
 eszközértékelési szabályok stb.) az űrlapon megjelenik és a válasz

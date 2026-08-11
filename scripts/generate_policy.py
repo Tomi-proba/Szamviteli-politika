@@ -465,9 +465,21 @@ def resolve_ertekelesi_felelos(p, a):
         delete(p[338])
 
 
+def combine_nev_regszam(nev, regszam):
+    """A név + regisztrálási szám külön kérdésként felvett válaszait fűzi
+    össze egyetlen kitöltendő hely szövegévé (a sablonban csak egy helyre
+    kerül mindkettő). FIGYELEM: a resolve.js `combineNevRegszam()` PONTOS
+    párja kell legyen."""
+    nev = (nev or "").strip()
+    regszam = (regszam or "").strip()
+    if nev and regszam:
+        return f"{nev}, nyilvántartási szám: {regszam}"
+    return nev or regszam
+
+
 def resolve_konyveles_felelos(p, a):
     tipus = answer(a, "konyveles_felelos_tipus", "mentesseg_20mft_arbevetel_alatt")
-    nev = a.get("konyveles_felelos_nev_regszam", "")
+    nev = combine_nev_regszam(a.get("konyveles_felelos_neve", ""), a.get("konyveles_felelos_regszam", ""))
     if tipus == "merlegkepes_konyvelo":
         fill_blanks(p[313], [nev])
         keep(p[312])

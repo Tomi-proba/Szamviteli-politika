@@ -112,7 +112,7 @@ def main():
         must_contain=[
             # eredeti kérdések behelyettesítései
             ans1["beszamolo_alairoja"],
-            ans1["konyveles_felelos_nev_regszam"],
+            ans1["konyveles_felelos_neve"],
             ans1["konyvvezetesert_felelos_szemely"],
             ans1["konyvelo_program"],
             ans1["jelentos_mertek_hanyad"],

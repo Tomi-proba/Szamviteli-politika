@@ -1,110 +1,84 @@
 {
   "_leiras": "Minta válaszkészlet teszteléshez - egy fiktív ügyfél adataival.",
-
   "szv1": "Példa Kereskedelmi és Szolgáltató Kft.",
   "szv2": "1111 Budapest, Példa utca 1.",
   "szv5": "Kovács János ügyvezető",
   "szv6": "12345678-2-41",
   "cegjegyzekszam": "01-09-123456",
-
   "bizonylat_hitelesites_tipus": "feljogositott_szemelyek",
   "szv52": "Kovács János ügyvezető és Nagy Éva gazdasági vezető együttesen",
   "szv53": "Nagy Éva gazdasági vezető",
-
   "szv75": "15 %",
   "szv76": "25 %",
   "szv84": "30 %",
   "szv87": "10 %",
-
   "penznem_tipus": "forint",
   "penznem_atteres_datum": "",
   "penznem_egyeb_neve": "",
-
   "onkoltsegszamitasi_szabalyzat": "mentesul",
-
   "szv13": "eves_beszamolo",
   "szv14": "a_valtozat",
   "szv15": "osszkoltseg_eljarassal",
-
   "van_idegen_nyelvu_beszamolo": "igen",
   "idegen_nyelv": "angol",
-
   "merlegkeszites_nap": "90",
   "merlegkeszites_van_kivetel": "nem",
   "merlegkeszites_kivetelek": "",
-
   "fordulonap_honap": "12",
   "fordulonap_nap": "31",
-
   "beszamolo_alairoja": "Kovács János ügyvezető",
-
   "letetbehelyezes_hatarido_tipus": "altalanos",
   "penzkezeles_felelos_tipus": "vezetes_altal_kijelolt",
-
   "konyvvizsgalat_tipus": "nincs_kotelezettseg",
   "konyvvizsgalo_adatai": "",
   "fenntarthatosagi_jelentes": "nem_koteles",
-
   "ertekeles_felelos_tipus": "vezetes_vagy_szv_rendert_felelos",
   "ertekelesi_delegalas": "",
-
   "konyveles_felelos_tipus": "merlegkepes_konyvelo",
-  "konyveles_felelos_nev_regszam": "Nagy Éva, mérlegképes könyvelő, reg. szám: 123456",
   "konyvvezetesert_felelos_szemely": "Nagy Éva",
-
   "beszamolo_honlapon": "nem",
   "beszamolo_honlap_cim": "",
-
   "konszolidacio_tipus": "nem_erintett",
   "konszolidacio_reszletszabalyok": "",
-
   "leltar_felelos_tipus": "eszkoz_forras_felelosok",
   "leltar_delegalas_reszletek": "",
-
   "jelentos_osszeg_bemutatas": "500",
   "jelentos_osszeg_ertelmezes": "500",
-
   "jelentos_mertek_hanyad": "10",
-
   "kiveteles_nagysag_osszeghatar": "10.000",
   "kiveteles_nagysag_sajattoke_szazalek": "10",
   "kiveteles_nagysag_bevetel_szazalek": "10",
   "kiveteles_nagysag_koltseg_szazalek": "10",
-
   "konyvelo_program": "KulcsSoft Számla és Könyvelő Program",
   "koltsegelszamolas_tipus": "csak_5",
-
   "bizonylat_konyveles_osszhang": "a bizonylatok kontírozással, a könyvelőprogramban rögzített hivatkozási számmal kapcsolódnak a könyvviteli számlákhoz",
-
   "bizonylatkezeles_szabalyai": "a bizonylatok iktatása és archiválása elektronikusan, a könyvelőprogram dokumentumtárában történik",
-
   "evkozi_zarasok_feladatai": "havi zárás: bank- és pénztárkönyv egyeztetése, ÁFA bevallás, bér- és járulékfeladás",
-
   "alapitas_atszervezes_aktivalja": "nem",
   "alapitas_atszervezes_leiras_ev": "",
-
   "van_cegertek": "nem",
   "cegertek_leiras_ev": "",
   "van_negativ_cegertek": "nem",
   "negativ_cegertek_leiras_ev": "",
-
   "ertekhelyesbites_immat_van": "nem",
   "ertekhelyesbites_immat_javak": "",
   "ertekhelyesbites_targyi_van": "nem",
   "ertekhelyesbites_targyi_eszkoz": "",
   "ertekhelyesbites_penzugyi_van": "nem",
   "ertekhelyesbites_penzugyi_eszkoz": "",
-
   "celtartalek_kepez": "nem",
   "celtartalek_jelentos_hatar": "",
   "celtartalek_elteres_szazalek": "",
-
   "kiegeszito_melleklet_sajatossagok": "likviditási gyorsráta, saját tőke aránya, eszközök megtérülési mutatói",
-
   "szerzodes_elszamolasi_egyseg": "nem_alkalmazzuk",
   "ertekpapir_kamatkulonbozet_elhatarolas": "nem_hataroljuk_el",
   "arfolyamveszteseg_halasztott_raforditas": "nem_szamoljuk_el",
-
   "ert4_alkalmazza_elhatarolas": "nem",
-  "bizomanyi_dij_hatar": ""
+  "bizomanyi_dij_hatar": "",
+  "konyveles_felelos_neve": "Nagy Éva",
+  "konyveles_felelos_regszam": "123456",
+  "beszamolo_nyelve": "magyar",
+  "beszamolo_mertekegysege": "ezer forint",
+  "leltar_felelos_leiras": "Az eszköz- és forrásfelelősök végzik.",
+  "szv45": "Elsődlegesen az 5. számlaosztályban, másodlagosan a 6-7. számlaosztályokban."
 }

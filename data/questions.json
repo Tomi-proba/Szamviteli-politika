@@ -169,10 +169,18 @@
       ]
     },
     {
-      "kulcs": "nyelv_mertekegyseg",
+      "kulcs": "beszamolo_nyelve",
       "forras": "ugyfel",
       "eredeti": "Szv#16",
-      "kerdes": "Mi a beszámoló nyelve és mértékegysége?",
+      "kerdes": "Mi a beszámoló nyelve?",
+      "tipus": "text",
+      "_nincs_sablonhely": true
+    },
+    {
+      "kulcs": "beszamolo_mertekegysege",
+      "forras": "ugyfel",
+      "eredeti": "Szv#16",
+      "kerdes": "Mi a beszámoló mértékegysége?",
       "tipus": "text",
       "_nincs_sablonhely": true
     },
@@ -432,10 +440,23 @@
       ]
     },
     {
-      "kulcs": "konyveles_felelos_nev_regszam",
+      "kulcs": "konyveles_felelos_neve",
       "forras": "ugyfel",
       "eredeti": "Szv#32",
-      "kerdes": "A számviteli rendért felelős személy neve és regisztrálási száma.",
+      "kerdes": "A számviteli rendért felelős személy neve.",
+      "tipus": "text",
+      "csak_ha": {
+        "konyveles_felelos_tipus": [
+          "merlegkepes_konyvelo",
+          "oklev_konyvvizsgalo"
+        ]
+      }
+    },
+    {
+      "kulcs": "konyveles_felelos_regszam",
+      "forras": "ugyfel",
+      "eredeti": "Szv#32",
+      "kerdes": "A számviteli rendért felelős személy regisztrálási száma.",
       "tipus": "text",
       "csak_ha": {
         "konyveles_felelos_tipus": [
@@ -526,10 +547,18 @@
       }
     },
     {
-      "kulcs": "leltar_felelos_tipus",
+      "kulcs": "leltar_felelos_leiras",
       "forras": "ugyfel",
       "eredeti": "Szv#36",
       "kerdes": "Ki a leltárkészítés és leltározás felelőse?",
+      "tipus": "text",
+      "_nincs_sablonhely": true
+    },
+    {
+      "kulcs": "leltar_felelos_tipus",
+      "forras": "iroda",
+      "eredeti": "Szv#36",
+      "kerdes": "Ki a leltárkészítés és leltározás felelőse a sablon szerint (vezetés/számviteli rendért felelős személy, eszköz-/forrásfelelősök, vagy egyedi delegálás)?",
       "tipus": "select",
       "opciok": [
         "vezetes_vagy_szv_rendert_felelos",
@@ -662,16 +691,8 @@
       "forras": "ugyfel",
       "eredeti": "Szv#45",
       "kerdes": "Mi az alkalmazott költségelszámolás módja?",
-      "tipus": "select",
-      "opciok": [
-        "5_8_szamlaosztaly",
-        "6_7_szamlaosztaly_is"
-      ],
-      "_nincs_sablonhely": true,
-      "cimkek": [
-        "Csak az 5. számlaosztály",
-        "5. és 6-7. számlaosztály is"
-      ]
+      "tipus": "text",
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "koltsegelszamolas_tipus",
