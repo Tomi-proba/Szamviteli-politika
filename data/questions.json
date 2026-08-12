@@ -1096,14 +1096,14 @@
       "kulcs": "szv75",
       "forras": "ugyfel",
       "eredeti": "Szv#75",
-      "kerdes": "Terven felüli értékcsökkenés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést?  Immateriális javak esetében? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "kerdes": "Terven felüli értékcsökkenés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést?  Immateriális javak esetében? Kérjük a százalékos mértéket megadni (pl. „15 %”).",
       "tipus": "text"
     },
     {
       "kulcs": "szv76",
       "forras": "ugyfel",
       "eredeti": "Szv#76",
-      "kerdes": "Befektetett pénzügyi eszközök esetében határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "kerdes": "Befektetett pénzügyi eszközök esetében határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést? Kérjük a százalékos mértéket megadni (pl. „15 %”).",
       "tipus": "text"
     },
     {
@@ -1181,7 +1181,7 @@
       "kulcs": "szv84",
       "forras": "ugyfel",
       "eredeti": "Szv#84",
-      "kerdes": "Készlet értékvesztés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "kerdes": "Készlet értékvesztés elszámolásakor határoztak-e meg egy olyan mértéket, melyen ha felül van a piaci érték és könyvszerinti érték különbözete akkor elszámolnak értékvesztést, ha alatta van akkor azt nem tekintik jelentősnek, ezért nem számolnak el értékvesztést? Kérjük a százalékos mértéket megadni (pl. „15 %”).",
       "tipus": "text"
     },
     {
@@ -1204,7 +1204,7 @@
       "kulcs": "szv87",
       "forras": "ugyfel",
       "eredeti": "Szv#87",
-      "kerdes": "A követelésekre elszámolandó értékvesztések összegét hogyan, milyen mértékek alkalmazásával határozzák meg? Kérjük a százalékos mértéket megadni (pl. „15 %”); üresen hagyva a sablon 20%-os alapértéke marad.",
+      "kerdes": "A követelésekre elszámolandó értékvesztések összegét hogyan, milyen mértékek alkalmazásával határozzák meg? Kérjük a százalékos mértéket megadni (pl. „15 %”).",
       "tipus": "text"
     },
     {
