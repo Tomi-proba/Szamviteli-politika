@@ -377,6 +377,13 @@ def resolve_nyelv(p, a):
         keep(p[597])
         delete(p[599])
         delete(p[600])
+        if not (a.get("van_idegen_nyelvu_beszamolo") or "").strip():
+            flag_before(
+                p[597],
+                "nincs válasz arra, hogy készül-e a magyaron felül idegen "
+                "nyelvű változat is - a 'nem' ág lett feltételezve, kérjük "
+                "ellenőrizni/pontosítani.",
+            )
 
 
 def resolve_penznem(p, a):
@@ -424,6 +431,13 @@ def resolve_merlegkeszites(p, a):
         delete(p[666])
         delete(p[667])
         delete(p[668])
+        if not (a.get("merlegkeszites_van_kivetel") or "").strip():
+            flag_before(
+                p[662],
+                "nincs válasz arra, hogy van-e kivételes mérlegkészítési "
+                "időpont valamely mérlegtételre - a 'nincs kivétel' ág lett "
+                "feltételezve, kérjük ellenőrizni/pontosítani.",
+            )
     else:
         fill_blanks(p[666], [nap, ill_honap, ill_nap])
         fill_blanks(p[667], [a.get("merlegkeszites_kivetelek", "")])
@@ -538,6 +552,12 @@ def resolve_nyilvanossagra_hozatal(p, a):
     else:
         keep(p[449])
         delete(p[445])
+        if not (a.get("beszamolo_honlapon") or "").strip():
+            flag_before(
+                p[449],
+                "nincs válasz arra, hogy elérhető-e a beszámoló honlapon - "
+                "a 'nem' ág lett feltételezve, kérjük ellenőrizni/pontosítani.",
+            )
     delete(p[447])
 
 
@@ -684,6 +704,13 @@ def resolve_ertekhelyesbites(p, a):
         else:
             keep(p[static_idx])
             delete(p[fill_idx])
+            if not (a.get(gate_key) or "").strip():
+                flag_before(
+                    p[static_idx],
+                    "nincs válasz arra, hogy alkalmazzák-e az "
+                    "értékhelyesbítést erre az eszközcsoportra - a 'nem' ág "
+                    "lett feltételezve, kérjük ellenőrizni/pontosítani.",
+                )
         delete(p[sep_idx])
 
 
@@ -697,12 +724,20 @@ def resolve_celtartalek(p, a):
         keep(p[1612])
         delete(p[1608])
         delete(p[1614])
-        flag_before(
-            p[1630],
-            "a vállalkozás nem képez céltartalékot lehetőség alapján - "
-            "kérjük ellenőrizni, hogy ez a bekezdés (lényeges eltérés %-a) "
-            "továbbra is szükséges-e, vagy törlendő.",
-        )
+        if (a.get("celtartalek_kepez") or "").strip():
+            flag_before(
+                p[1630],
+                "a vállalkozás nem képez céltartalékot lehetőség alapján - "
+                "kérjük ellenőrizni, hogy ez a bekezdés (lényeges eltérés %-a) "
+                "továbbra is szükséges-e, vagy törlendő.",
+            )
+        else:
+            flag_before(
+                p[1630],
+                "nincs válasz arra, hogy képez-e a vállalkozás lehetőség "
+                "alapján céltartalékot - a 'nem' ág lett feltételezve, "
+                "kérjük ellenőrizni/pontosítani.",
+            )
     delete(p[1610])
 
 

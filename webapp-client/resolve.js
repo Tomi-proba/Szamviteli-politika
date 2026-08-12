@@ -13,6 +13,12 @@ function resolveNyelv(p, a, xmlDoc) {
     keepP(p[597], xmlDoc);
     deleteP(p[599]);
     deleteP(p[600]);
+    if (!(a.van_idegen_nyelvu_beszamolo || '').trim()) {
+      flagBefore(p[597],
+        "nincs válasz arra, hogy készül-e a magyaron felül idegen " +
+        "nyelvű változat is - a 'nem' ág lett feltételezve, kérjük " +
+        "ellenőrizni/pontosítani.", xmlDoc);
+    }
   }
 }
 
@@ -61,6 +67,12 @@ function resolveMerlegkeszites(p, a, xmlDoc) {
     deleteP(p[666]);
     deleteP(p[667]);
     deleteP(p[668]);
+    if (!(a.merlegkeszites_van_kivetel || '').trim()) {
+      flagBefore(p[662],
+        "nincs válasz arra, hogy van-e kivételes mérlegkészítési " +
+        "időpont valamely mérlegtételre - a 'nincs kivétel' ág lett " +
+        "feltételezve, kérjük ellenőrizni/pontosítani.", xmlDoc);
+    }
   } else {
     fillBlanks(p[666], [nap, illHonap, illNap], xmlDoc);
     fillBlanks(p[667], [a.merlegkeszites_kivetelek || ''], xmlDoc);
@@ -156,6 +168,11 @@ function resolveNyilvanossagraHozatal(p, a, xmlDoc) {
   } else {
     keepP(p[449], xmlDoc);
     deleteP(p[445]);
+    if (!(a.beszamolo_honlapon || '').trim()) {
+      flagBefore(p[449],
+        "nincs válasz arra, hogy elérhető-e a beszámoló honlapon - " +
+        "a 'nem' ág lett feltételezve, kérjük ellenőrizni/pontosítani.", xmlDoc);
+    }
   }
   deleteP(p[447]);
 }
@@ -264,6 +281,12 @@ function resolveErtekhelyesbites(p, a, xmlDoc) {
     } else {
       keepP(p[staticIdx], xmlDoc);
       deleteP(p[fillIdx]);
+      if (!(a[gateKey] || '').trim()) {
+        flagBefore(p[staticIdx],
+          "nincs válasz arra, hogy alkalmazzák-e az " +
+          "értékhelyesbítést erre az eszközcsoportra - a 'nem' ág " +
+          "lett feltételezve, kérjük ellenőrizni/pontosítani.", xmlDoc);
+      }
     }
     deleteP(p[sepIdx]);
   }
@@ -278,10 +301,17 @@ function resolveCeltartalek(p, a, xmlDoc) {
   } else {
     keepP(p[1612], xmlDoc);
     deleteP(p[1608]); deleteP(p[1614]);
-    flagBefore(p[1630],
-      "a vállalkozás nem képez céltartalékot lehetőség alapján - " +
-      "kérjük ellenőrizni, hogy ez a bekezdés (lényeges eltérés %-a) " +
-      "továbbra is szükséges-e, vagy törlendő.", xmlDoc);
+    if ((a.celtartalek_kepez || '').trim()) {
+      flagBefore(p[1630],
+        "a vállalkozás nem képez céltartalékot lehetőség alapján - " +
+        "kérjük ellenőrizni, hogy ez a bekezdés (lényeges eltérés %-a) " +
+        "továbbra is szükséges-e, vagy törlendő.", xmlDoc);
+    } else {
+      flagBefore(p[1630],
+        "nincs válasz arra, hogy képez-e a vállalkozás lehetőség " +
+        "alapján céltartalékot - a 'nem' ág lett feltételezve, " +
+        "kérjük ellenőrizni/pontosítani.", xmlDoc);
+    }
   }
   deleteP(p[1610]);
 }

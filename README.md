@@ -147,6 +147,16 @@ A script:
    miközben a sablon egy leírási időt kérne), **nem tippel** - egy jól
    látható, félkövér piros "⚠ ELLENŐRIZENDŐ" jelölést szúr be a bekezdés elé,
    és a szövegrészt eredeti, kitöltetlen állapotban hagyja.
+6. **A KITÖLTETLEN mező sosem egyenlő a "nem" válasszal.** Néhány igen/nem
+   jellegű kérdésnél (idegen nyelvű beszámoló, kivételes mérlegkészítési
+   időpont, honlapon közzététel, értékhelyesbítés eszközcsoportonként,
+   céltartalék-képzés) a sablonban nincs olyan harmadik ág, ami "nincs
+   válasz"-t jelentene - ha a mező üresen marad, a motor a "nem" ágat
+   használja (mert ez a dokumentum-szerkezet szempontjából muszáj), **de
+   ilyenkor mindig `⚠ ELLENŐRIZENDŐ` jelölést is beszúr**, hogy a
+   felülvizsgáló lássa: ez nem az ügyfél tényleges válasza volt, csak
+   feltételezés. Egy kifejezetten begépelt "nem" ugyanígy a "nem" ágra
+   kerül, de flag NÉLKÜL, mert az valódi válasz.
 
 ## Lefedettség – mit tölt ki és mit NEM
 
