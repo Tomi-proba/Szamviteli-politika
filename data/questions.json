@@ -124,14 +124,8 @@
       "forras": "ugyfel",
       "eredeti": "Szv#13",
       "kerdes": "Milyen az alkalmazott beszámoló formája?",
-      "tipus": "select",
+      "tipus": "combo",
       "opciok": [
-        "eves_beszamolo",
-        "egyszerusitett_eves_beszamolo",
-        "mikrogazdalkodoi_egyszerusitett_eves_beszamolo",
-        "eves_beszamolo_ifrs_szerint"
-      ],
-      "cimkek": [
         "Éves beszámoló",
         "Egyszerűsített éves beszámoló",
         "Mikrogazdálkodói egyszerűsített éves beszámoló",

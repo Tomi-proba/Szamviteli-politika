@@ -289,7 +289,7 @@ function resolveCeltartalek(p, a, xmlDoc) {
 function resolveBeszamoloForma(p, a, xmlDoc) {
   // Szv#13 - IV.2. beszámoló-forma ág + IV.8. kiegészítő melléklet blokk
   // (lásd a generate_policy.py részletes megjegyzését).
-  const tipus = answer(a, 'szv13');
+  const tipus = classifyBeszamoloForma(answer(a, 'szv13'));
   const branches = {
     eves_beszamolo: 487,
     egyszerusitett_eves_beszamolo: 490,

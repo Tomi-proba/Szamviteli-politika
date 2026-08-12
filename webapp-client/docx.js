@@ -306,6 +306,16 @@ function classifyPenznem(raw) {
   return 'egyeb';
 }
 
+// A generate_policy.py classify_beszamolo_forma() PONTOS párja.
+function classifyBeszamoloForma(raw) {
+  const t = deaccent((raw || '').trim().toLowerCase()).replace(/_/g, ' ');
+  if (t.includes('ifrs')) return raw;
+  if (t.includes('mikro')) return 'mikrogazdalkodoi_egyszerusitett_eves_beszamolo';
+  if (t.includes('egyszerus')) return 'egyszerusitett_eves_beszamolo';
+  if (t.includes('eves')) return 'eves_beszamolo';
+  return raw;
+}
+
 function illustrativeDate(fordulonapHonap, fordulonapNap, offsetDays) {
   // A generate_policy.py illustrative_date() PONTOS tükörképe. Fontos: a
   // Python datetime.date szigorúan validál (hónap 1-12, a hónapban létező

@@ -182,6 +182,19 @@ közül). Hasonlóan, a Szv#45 (költségelszámolás módja) ügyfél-oldali
 kérdése szabad szöveges leírás marad, a tényleges ág-választást a
 `koltsegelszamolas_tipus` iroda-mező végzi.
 
+Más kérdéseknél (Szv#12 pénznem, Szv#13 beszámoló-forma) nincs szükség
+külön iroda-oldali fordításra, mert a válaszlehetőségek kis, jól ismert,
+névvel azonosítható halmazt alkotnak (forint/euró/USD/egyéb; éves/
+egyszerűsített éves/mikrogazdálkodói/IFRS) - ezeknél a mező típusa
+`"combo"`: szabadon gépelhető, javaslatokkal (nem kényszerű legördülő).
+A `classify_penznem()`/`classifyPenznem()` és `classify_beszamolo_forma()`/
+`classifyBeszamoloForma()` (mindkettő Python+JS lockstepben) ékezet- és
+kis/nagybetű-független kulcsszó-illesztéssel sorolja be a begépelt szöveget
+a sablon ismert ágaira; amit nem tud egyértelműen besorolni (pl. "IFRS
+szerinti", aminek a sablonban nincs alternatívája), azt a meglévő
+`flag_before()`/`flagBefore()` kézi-ellenőrzés jelzéssel hagyja a
+munkatársnak, nem tippel.
+
 A fennmaradó ~87 kérdés (cégadatok, könyvelési gyakorlat részletei,
 eszközértékelési szabályok stb.) az űrlapon megjelenik és a válasz
 összegyűjtésre kerül (az ügyfél kódjában, majd az iroda oldalon), de a

@@ -309,6 +309,30 @@ def classify_penznem(raw):
     return "egyeb"
 
 
+def classify_beszamolo_forma(raw):
+    """A szabadon gépelhető beszámoló-forma mező (Szv#13) besorolása a
+    sablon 3 ismert ágára (éves / egyszerűsített éves / mikrogazdálkodói).
+    Ékezet- és kis/nagybetű-független, kulcsszó alapú illesztés - amit nem
+    tud egyértelműen besorolni (pl. "IFRS szerinti", aminek a sablonban
+    nincs alternatívája, vagy üres/félreérthető válasz), azt változatlanul
+    visszaadja: a resolve_beszamolo_forma() ezt már eddig is flag_before()-
+    zal jelezte kézi ellenőrzésre, ez a viselkedés nem változik.
+
+    FIGYELEM: a resolve.js `classifyBeszamoloForma()` PONTOS párja kell
+    legyen.
+    """
+    t = _deaccent((raw or "").strip().lower()).replace("_", " ")
+    if "ifrs" in t:
+        return raw
+    if "mikro" in t:
+        return "mikrogazdalkodoi_egyszerusitett_eves_beszamolo"
+    if "egyszerus" in t:
+        return "egyszerusitett_eves_beszamolo"
+    if "eves" in t:
+        return "eves_beszamolo"
+    return raw
+
+
 def answer(a, key, default=""):
     """Egy válasz kiolvasása ág-választáshoz.
 
@@ -697,7 +721,7 @@ def resolve_beszamolo_forma(p, a):
     beszámolónak pedig egyáltalán nincs kiegészítő melléklete (398/2012.
     Korm. r.) - ezekben az esetekben nem tippelünk, hanem jelölünk.
     """
-    tipus = answer(a, "szv13")
+    tipus = classify_beszamolo_forma(answer(a, "szv13"))
     branches = {
         "eves_beszamolo": 487,
         "egyszerusitett_eves_beszamolo": 490,
