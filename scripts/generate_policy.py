@@ -916,7 +916,10 @@ def resolve_onkoltsegszamitas(p, a):
 
 
 def resolve_ert4(p, a):
-    if a.get("ert4_alkalmazza_elhatarolas") == "igen":
+    # Szabadon gépelt igen/nem (nem legördülő) - bármi, ami "igen"-nel
+    # kezdődik, igenlő válasznak számít (pl. "igen", "Igen, alkalmazzuk"),
+    # minden más (üres, "nem", bármi más) a biztonságos "nem" ágra esik.
+    if (a.get("ert4_alkalmazza_elhatarolas") or "").strip().lower().startswith("igen"):
         fill_blanks(p[1494], [a.get("bizomanyi_dij_hatar", "")])
         keep(p[1496])
         delete(p[1500])

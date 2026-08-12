@@ -439,7 +439,9 @@ function resolveOnkoltsegszamitas(p, a, xmlDoc) {
 }
 
 function resolveErt4(p, a, xmlDoc) {
-  if (a.ert4_alkalmazza_elhatarolas === 'igen') {
+  // Szabadon gépelt igen/nem (nem legördülő) - a generate_policy.py
+  // resolve_ert4() PONTOS párja.
+  if ((a.ert4_alkalmazza_elhatarolas || '').trim().toLowerCase().startsWith('igen')) {
     fillBlanks(p[1494], [a.bizomanyi_dij_hatar || ''], xmlDoc);
     keepP(p[1496], xmlDoc);
     deleteP(p[1500]);

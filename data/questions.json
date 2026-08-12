@@ -1495,27 +1495,14 @@
       "forras": "ugyfel",
       "eredeti": "Ért#4",
       "kerdes": "Élnek-e ezzel a lehetőséggel: \"Aktív időbeli elhatárolásként lehet kimutatni a hitel, a kölcsön felvételéhez közvetlenül kapcsolódóan felmerült költségeket, beleértve a hitel, a kölcsön feltételeként előírt bankgarancia vagy hitelvizsgálat díját, a hitel igénybevétele miatt fizetett kezelési díjat és folyósítási jutalékot, amennyiben azokat nem a 47. § (4) bekezdés a) pontja szerint számolják el?\"",
-      "tipus": "select",
-      "opciok": [
-        "nem",
-        "igen"
-      ],
-      "cimkek": [
-        "Nem",
-        "Igen"
-      ]
+      "tipus": "text"
     },
     {
       "kulcs": "bizomanyi_dij_hatar",
       "forras": "ugyfel",
       "eredeti": "Ért#4",
-      "kerdes": "Ha igen: milyen összeghatár (E Ft) felett tekintik jelentősnek a bizományi díjat / vásárolt vételi opció díját?",
-      "tipus": "text",
-      "csak_ha": {
-        "ert4_alkalmazza_elhatarolas": [
-          "igen"
-        ]
-      }
+      "kerdes": "Ha igen: milyen összeghatár (E Ft) felett tekintik jelentősnek a bizományi díjat / vásárolt vételi opció díját? (üresen hagyható, ha nem releváns)",
+      "tipus": "text"
     },
     {
       "kulcs": "ert5",
