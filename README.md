@@ -418,7 +418,11 @@ könnyen átalakítható, a lényeg, hogy a beérkező válaszokból végül egy
 2. A válaszokból összeáll egy `answers.json`.
 3. Lefut a `generate_policy.py` - elkészül a vázlat.
 4. A vázlatot **egy kolléga átnézi**, különös figyelmet fordítva a
-   `⚠ ELLENŐRIZENDŐ` jelölésekre és a még sárga/kék (döntetlen) részekre.
+   `⚠ ELLENŐRIZENDŐ` jelölésekre és a még sárga/kék (döntetlen) részekre. Az
+   iroda-oldal a generálás gomb után nem csak letölti a vázlatot, hanem meg
+   is számolja és kiírja, hány `⚠ ELLENŐRIZENDŐ` jelölés került bele - így
+   már a letöltés pillanatában látszik, mennyi kézi munka vár, nem csak
+   Wordben lapozgatva derül ki.
 5. Csak jóváhagyás után megy ki az ügyfélnek. **Az ügyfél a nyers, gép által
    generált vázlatot soha nem látja.**
 

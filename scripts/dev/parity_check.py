@@ -43,8 +43,8 @@ const path = require('path');
   await page.setContent('<!doctype html><meta charset="utf-8"><body></body>');
   await page.addScriptTag({ content: engine });
   const arr = await page.evaluate(async ({ tmplB64, answers }) => {
-    const out = await generateFromAnswers(tmplB64, answers);
-    return Array.from(new Uint8Array(out));
+    const { bytes } = await generateFromAnswers(tmplB64, answers);
+    return Array.from(new Uint8Array(bytes));
   }, { tmplB64, answers });
   fs.writeFileSync(outPath, Buffer.from(arr));
   await browser.close();

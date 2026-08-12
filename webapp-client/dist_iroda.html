@@ -1549,9 +1549,16 @@ async function generateFromAnswers(templateB64, answers) {
   resolveErtekvesztesMertekek(p, answers, t, xmlDoc);
   removeJeloltInstructions(p);
 
+  // A flagBefore() által beszúrt "⚠ ELLENŐRIZENDŐ" bekezdések megszámolása -
+  // a végleges (a flag-eket is tartalmazó) bekezdéslistán, nem a generálás
+  // elején rögzített `p`-n, mert az utóbbi még a beszúrások előtti állapot.
+  const flagCount = getBodyParagraphs(xmlDoc).filter(fp =>
+    getRuns(fp).some(r => getRunText(r).includes('⚠ ELLENŐRIZENDŐ'))
+  ).length;
+
   const newXml = new XMLSerializer().serializeToString(xmlDoc);
   const out = await buildZip(zip, new Map([['word/document.xml', new TextEncoder().encode(newXml)]]));
-  return out;
+  return { bytes: out, flagCount };
 }
 
 
@@ -1615,7 +1622,7 @@ document.getElementById("policyForm").addEventListener("submit", async (ev) => {
   btn.textContent = "Generálás...";
   try {
     const answers = collectAnswers();
-    const bytes = await generateFromAnswers(TEMPLATE_B64, answers);
+    const { bytes, flagCount } = await generateFromAnswers(TEMPLATE_B64, answers);
     const filename = "szamviteli_politika_vazlat.docx";
 
     if (window.claude && window.claude.downloads) {
@@ -1623,7 +1630,12 @@ document.getElementById("policyForm").addEventListener("submit", async (ev) => {
     } else {
       downloadViaBrowser(bytes, filename);
     }
-    setStatus("ok", "A vázlat elkészült és letöltésre került. Mielőtt kimegy az ügyfélnek, nézd át - a piros “⚠ ELLENŐRIZENDŐ” jelölésekre és a még sárga/kék (döntetlen) részekre figyelj.");
+    const flagMsg = flagCount === 0
+      ? "Egyetlen “⚠ ELLENŐRIZENDŐ” jelölés sem került a dokumentumba - ettől függetlenül nézd át kiküldés előtt, a még sárga/kék (döntetlen) részekre is figyelve."
+      : flagCount === 1
+        ? "<strong>1 helyen</strong> került “⚠ ELLENŐRIZENDŐ” jelölés a dokumentumba - ezt mindenképp nézd át kiküldés előtt, a még sárga/kék (döntetlen) részekkel együtt."
+        : `<strong>${flagCount} helyen</strong> került “⚠ ELLENŐRIZENDŐ” jelölés a dokumentumba - ezeket mindenképp nézd át kiküldés előtt, a még sárga/kék (döntetlen) részekkel együtt.`;
+    setStatus("ok", `A vázlat elkészült és letöltésre került. ${flagMsg}`);
   } catch (err) {
     const code = err && err.code;
     if (code && DOWNLOAD_ERROR_MESSAGES[code]) {

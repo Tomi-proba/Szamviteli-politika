@@ -572,7 +572,14 @@ async function generateFromAnswers(templateB64, answers) {
   resolveErtekvesztesMertekek(p, answers, t, xmlDoc);
   removeJeloltInstructions(p);
 
+  // A flagBefore() által beszúrt "⚠ ELLENŐRIZENDŐ" bekezdések megszámolása -
+  // a végleges (a flag-eket is tartalmazó) bekezdéslistán, nem a generálás
+  // elején rögzített `p`-n, mert az utóbbi még a beszúrások előtti állapot.
+  const flagCount = getBodyParagraphs(xmlDoc).filter(fp =>
+    getRuns(fp).some(r => getRunText(r).includes('⚠ ELLENŐRIZENDŐ'))
+  ).length;
+
   const newXml = new XMLSerializer().serializeToString(xmlDoc);
   const out = await buildZip(zip, new Map([['word/document.xml', new TextEncoder().encode(newXml)]]));
-  return out;
+  return { bytes: out, flagCount };
 }
