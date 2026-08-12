@@ -16,16 +16,22 @@ python3 webapp-client/build.py
 # -> webapp-client/dist_iroda.html
 ```
 
-**`dist_ugyfel.html` - ezt küldjétek ki az ügyfélnek.** Csak az ügyféltől
-kérdezendő mezőket tartalmazza (a szakmai minősítést igénylő "iroda" kérdések
-nincsenek benne), és **nem generál semmilyen dokumentumot** - a kitöltés
-végén egy kódot ad, amit az ügyfél e-mailben visszaküld. Az ügyfél ebből az
-oldalból semmit nem tud kikövetkeztetni az automatizálásról vagy a végleges
+**`dist_ugyfel.html` - ezt küldjétek ki az ügyfélnek.** Az összes kérdést
+tartalmazza - nincs külön, csak-az-irodán-belül-eldönthető kérdéscsoport,
+mert a gyakorlatban minden választ az ügyféltől kérnek meg. (Korábban 15
+kérdés `forras: "iroda"` volt - ezek a sablon egy-egy VAGY-döntését professzionális
+minősítésként modellezték -, de ez nem illett a tényleges munkafolyamathoz,
+ezért mind át lettek sorolva `forras: "ugyfel"`-re; a `questions.json`-ban
+technikailag továbbra is létezik a `forras` mező, csak jelenleg minden
+kérdésnél `"ugyfel"` az értéke.) Az oldal **nem generál semmilyen
+dokumentumot** - a kitöltés végén egy kódot ad, amit az ügyfél e-mailben
+visszaküld (vagy fájlba menthető, ld. lentebb). Az ügyfél ebből az oldalból
+semmit nem tud kikövetkeztetni az automatizálásról vagy a végleges
 dokumentumról.
 
 **`dist_iroda.html` - ez a belső, jelszóval védett eszköz.** Itt illeszthető
-be az ügyféltől kapott kód (ez előtölti az ügyfél válaszait), itt tölthetők
-ki a fennmaradó, szakmai minősítést igénylő mezők, és csak itt lehet
+be az ügyféltől kapott kód/fájl (ez előtölti az ügyfél válaszait), itt
+ellenőrizhető/pontosítható bármelyik mező kiküldés előtt, és csak itt lehet
 legenerálni a Word-vázlatot. **A jelszó alapértelmezetten `Politika2026!`**
 - ez KIZÁRÓLAG visszatartás, nem valódi hozzáférés-vezérlés (statikus oldal,
 nincs szerver, egy technikailag értő személy a forráskódból kiolvashatná a
@@ -398,12 +404,15 @@ futtatni**, és a két motort mindig lépésben kell tartani.
 
 ## Kérdőív a kérdésbank alapján
 
-A `data/questions.json` fájl `forras` mezője jelzi, hogy az adott kérdést
-**az ügyfélnek** kell-e kiküldeni, vagy **az irodán belül** (könyvelő) kell
-eldönteni - néhány kérdés (pl. "kötelező-e a könyvvizsgálat", "fenntartha-
-tósági jelentésre kötelesek-e") jogi/szakmai minősítés, amit egy átlagos
-ügyfél nem feltétlen tud pontosan megválaszolni, ezért ezeket célszerű a
-kollégának előre kitöltenie, mielőtt lefut a generálás.
+A `data/questions.json` fájl `forras` mezője technikailag megkülönbözteti
+az **ügyfélnek** kiküldendő és az **irodán belül** eldöntendő kérdéseket,
+de jelenleg minden kérdés `forras: "ugyfel"` - a tényleges munkafolyamatban
+nincs külön, csak-irodai lépés, minden választ az ügyféltől kérnek meg. Ha
+a jövőben mégis szükség lenne rá (pl. egy kérdés jogi/szakmai minősítést
+igényelne, amit egy átlagos ügyfél nem tud pontosan megválaszolni), a mező
+`"iroda"`-ra állítható egy adott kérdésnél - ekkor az a kérdés eltűnik a
+`dist_ugyfel.html`-ből, és csak a jelszóval védett `dist_iroda.html`-en
+marad kitölthető.
 
 A kérdőív technikai megvalósítására (Google Form / Typeform / saját űrlap)
 ez a projekt nem tesz javaslatot - a `questions.json` bármelyikhez
@@ -414,7 +423,7 @@ könnyen átalakítható, a lényeg, hogy a beérkező válaszokból végül egy
 ## Munkafolyamat-javaslat
 
 1. A kérdőívet (a `questions.json` alapján összeállítva) kiküldik az
-   ügyfélnek, illetve a belső ("iroda") kérdéseket egy kolléga tölti ki.
+   ügyfélnek - minden kérdést az ügyfél válaszol meg.
 2. A válaszokból összeáll egy `answers.json`.
 3. Lefut a `generate_policy.py` - elkészül a vázlat.
 4. A vázlatot **egy kolléga átnézi**, különös figyelmet fordítva a

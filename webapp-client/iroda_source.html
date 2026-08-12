@@ -85,14 +85,6 @@
   .lede {
     color: var(--ink-muted); max-width: 62ch; margin: 0 0 1.4rem; font-size: 0.98rem;
   }
-  .legend { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-  .legend .chip {
-    display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.32rem 0.7rem;
-    border-radius: 999px; font-size: 0.82rem; font-weight: 600;
-  }
-  .chip.ugyfel { background: var(--tag-ugyfel-soft); color: var(--tag-ugyfel); }
-  .chip.iroda { background: var(--tag-iroda-soft); color: var(--tag-iroda); }
-  .chip .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; }
 
   nav.toc {
     display: none;
@@ -129,13 +121,6 @@
   .field-label label {
     font-size: 0.92rem; font-weight: 600; color: var(--ink); line-height: 1.4;
   }
-  .tag {
-    flex: none; margin-top: 0.15rem; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em;
-    text-transform: uppercase; padding: 0.1rem 0.42rem; border-radius: 4px;
-  }
-  .tag.ugyfel { background: var(--tag-ugyfel-soft); color: var(--tag-ugyfel); }
-  .tag.iroda { background: var(--tag-iroda-soft); color: var(--tag-iroda); }
-
   .no-sablon-note {
     margin: 0.4rem 0 0; font-size: 0.78rem; font-style: italic; color: var(--ink-muted);
   }
@@ -256,10 +241,6 @@
       fájl egy <strong>vázlat</strong>: mielőtt kimegy az ügyfélnek, nézd át, különös
       tekintettel a pirossal jelölt, ellenőrizendő részekre.
     </p>
-    <div class="legend">
-      <span class="chip ugyfel"><span class="dot"></span>ügyféltől kérdezendő</span>
-      <span class="chip iroda"><span class="dot"></span>iroda tölti ki</span>
-    </div>
   </header>
 
   <div class="import-box">
@@ -341,8 +322,6 @@ function buildAutoSections(questions, chunkSize) {
 }
 
 function fieldHtml(q) {
-  const forrasClass = q.forras === "ugyfel" ? "ugyfel" : "iroda";
-  const forrasLabel = q.forras === "ugyfel" ? "ügyfél" : "iroda";
   let dataAttrs = "";
   if (q.csak_ha) {
     const depKey = Object.keys(q.csak_ha)[0];
@@ -368,7 +347,6 @@ function fieldHtml(q) {
     <div class="field" ${dataAttrs}>
       <div class="field-label">
         <label for="f_${q.kulcs}">${q.eredeti} &middot; ${q.kerdes}</label>
-        <span class="tag ${forrasClass}">${forrasLabel}</span>
       </div>
       ${input}
       ${noSablonNote}

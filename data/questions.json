@@ -263,7 +263,7 @@
     },
     {
       "kulcs": "letetbehelyezes_hatarido_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#19",
       "kerdes": "A letétbe helyezés határideje az általános (mérlegfordulónapot követő ötödik hónap utolsó napja), vagy a vállalkozás értékpapírjait EGT-állam szabályozott piacán forgalmazzák (negyedik hónap utolsó napja)?",
       "tipus": "select",
@@ -317,7 +317,7 @@
     },
     {
       "kulcs": "konyvvizsgalat_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#25/#28",
       "kerdes": "Könyvvizsgálati kötelezettségük van? / Ki a könyvvizsgálójuk?",
       "tipus": "select",
@@ -366,7 +366,7 @@
     },
     {
       "kulcs": "fenntarthatosagi_jelentes",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#29",
       "kerdes": "Fenntarthatósági jelentés készítési kötelezettsége van a társaságnak? (Sztv. 95/E.§. (1) a), 134/I. § (1)) Ha igen, ugyanaz a könyvvizsgáló végzi, mint az éves beszámolóét?",
       "tipus": "select",
@@ -391,7 +391,7 @@
     },
     {
       "kulcs": "ertekeles_felelos_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#31",
       "kerdes": "Ki a felelős a számvitelpolitikai döntésekért? (Az értékelési feladatok elvégzése a vezetés/számviteli rendért felelős személy feladata, vagy egyedi delegálás van?)",
       "tipus": "select",
@@ -406,7 +406,7 @@
     },
     {
       "kulcs": "ertekelesi_delegalas",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#31",
       "kerdes": "Ha egyedi delegálás: milyen felhatalmazások, delegált hatáskörök, felelősségek ezek?",
       "tipus": "text",
@@ -418,7 +418,7 @@
     },
     {
       "kulcs": "konyveles_felelos_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#32",
       "kerdes": "Ki a könyvvezetésért felelős személy (mérlegképes könyvelő, okleveles könyvvizsgáló)?",
       "tipus": "select",
@@ -503,7 +503,7 @@
     },
     {
       "kulcs": "konszolidacio_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#35",
       "kerdes": "Tagja a vállalkozás olyan vállalkozáscsoportnak, amely konszolidált beszámolót kell készítenie?",
       "tipus": "select",
@@ -550,7 +550,7 @@
     },
     {
       "kulcs": "leltar_felelos_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#36",
       "kerdes": "Ki a leltárkészítés és leltározás felelőse a sablon szerint (vezetés/számviteli rendért felelős személy, eszköz-/forrásfelelősök, vagy egyedi delegálás)?",
       "tipus": "select",
@@ -587,7 +587,7 @@
     },
     {
       "kulcs": "penzkezeles_felelos_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#37",
       "kerdes": "A pénzkezelést a vezetés által írásban kijelölt személyek végzik, vagy a pénzkezelési szabályzatban megjelölt személyek?",
       "tipus": "select",
@@ -690,7 +690,7 @@
     },
     {
       "kulcs": "koltsegelszamolas_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#45",
       "kerdes": "A költségelszámolás választott módja a sablon szerint: csak az 5. számlaosztályban; elsődlegesen 5., másodlagosan 6-7.; vagy elsődlegesen 6-7., másodlagosan 5. számlaosztályban?",
       "tipus": "select",
@@ -745,7 +745,7 @@
     },
     {
       "kulcs": "bizonylat_hitelesites_tipus",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#51",
       "kerdes": "A kimenő számlákat aláírják? (A bizonylatok alaki/tartalmi hitelességét a képviseletre jogosult aláírása igazolja, vagy bizonylattípusonként külön feljogosított aláírók vannak?)",
       "tipus": "select",
@@ -1164,7 +1164,7 @@
     },
     {
       "kulcs": "szerzodes_elszamolasi_egyseg",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#83",
       "kerdes": "A nagy tömegben, sorozatban előállított termékek esetében alkalmazzák a szerződés elszámolási egységére vonatkozó szabályrendszert?",
       "tipus": "select",
@@ -1265,7 +1265,7 @@
     },
     {
       "kulcs": "ertekpapir_kamatkulonbozet_elhatarolas",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#94",
       "kerdes": "A befektetett pénzügyi eszközök közé sorolt, névérték alatt beszerzett kamatozó értékpapír névérték és beszerzési érték közötti nyereségjellegű különbözetét aktív időbeli elhatárolásként kimutatják?",
       "tipus": "select",
@@ -1288,7 +1288,7 @@
     },
     {
       "kulcs": "arfolyamveszteseg_halasztott_raforditas",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#95",
       "kerdes": "A devizakészlettel nem fedezett, külföldi pénzértékre szóló hiteltartozások mérlegfordulónapi értékeléséből keletkezett árfolyamveszteséget halasztott ráfordításként elszámolják?",
       "tipus": "select",
@@ -1421,7 +1421,7 @@
     },
     {
       "kulcs": "onkoltsegszamitasi_szabalyzat",
-      "forras": "iroda",
+      "forras": "ugyfel",
       "eredeti": "Szv#106",
       "kerdes": "Mentesül a Vállalkozás az önköltségszámítási szabályzat készítése alól (a Számviteli törvény szerinti küszöbértékek alatt marad)?",
       "tipus": "select",
