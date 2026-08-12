@@ -207,12 +207,17 @@
 
   <div class="resume-box">
     <p>Korábban elkezdte és elmentette a kitöltést? Töltse be a mentett
-       fájlt, és onnan folytathatja.</p>
+       fájlt, vagy illessze be a kódot, és onnan folytathatja.</p>
     <div class="row">
       <button type="button" id="resumeFileBtn">Korábbi mentés megnyitása...</button>
       <input type="file" id="resumeFile" accept=".txt,.json" hidden>
       <span class="import-status" id="resumeStatus"></span>
     </div>
+    <details class="code-details">
+      <summary>...vagy a kód beillesztése</summary>
+      <textarea class="code-box" id="resumeCode" placeholder="Ide illessze be a korábban mentett kódot..."></textarea>
+      <button type="button" id="resumeCodeBtn">Beolvasás</button>
+    </details>
   </div>
 
   <form id="policyForm">
@@ -555,6 +560,22 @@ document.getElementById("resumeFile").addEventListener("change", (ev) => {
   reader.onerror = () => { statusEl.textContent = "A fájl nem olvasható."; };
   reader.readAsText(file, "utf-8");
   ev.target.value = "";
+});
+
+document.getElementById("resumeCodeBtn").addEventListener("click", () => {
+  const raw = document.getElementById("resumeCode").value;
+  const statusEl = document.getElementById("resumeStatus");
+  if (!raw.trim()) {
+    statusEl.textContent = "Nincs beillesztett kód.";
+    return;
+  }
+  try {
+    const answers = parseAnswersFileText(raw);
+    const filled = applyAnswers(answers);
+    statusEl.textContent = `${filled} válasz betöltve.`;
+  } catch (e) {
+    statusEl.textContent = "A kód nem olvasható be.";
+  }
 });
 
 function finalizeSubmit() {
