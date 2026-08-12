@@ -149,6 +149,12 @@
   .code-details { margin-top: 1rem; }
   .code-details summary { cursor: pointer; color: var(--ink-muted); font-size: 0.88rem; margin-bottom: 0.6rem; }
   .code-details .code-box { margin-top: 0.6rem; }
+  .btn-back {
+    display: block; margin-top: 1.4rem; padding: 0; border: none; background: none;
+    font-family: var(--sans); font-size: 0.88rem; color: var(--ink-muted); cursor: pointer;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .btn-back:hover { color: var(--accent-ink); }
 
   .field.missing input, .field.missing select {
     border-color: var(--flag); box-shadow: 0 0 0 2px var(--flag-soft);
@@ -236,6 +242,7 @@
         <textarea class="code-box" id="codeBox" readonly></textarea>
         <button type="button" class="btn-secondary" id="copyBtn">Kód másolása</button>
       </details>
+      <button type="button" class="btn-back" id="backToFormBtn">&larr; Vissza a kérdőívhez</button>
     </div>
   </div>
 </div>
@@ -569,6 +576,12 @@ function finalizeSubmit() {
   document.getElementById("done").classList.add("show");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+document.getElementById("backToFormBtn").addEventListener("click", () => {
+  document.getElementById("done").classList.remove("show");
+  document.getElementById("policyForm").style.display = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 
 document.getElementById("policyForm").addEventListener("submit", (ev) => {
   ev.preventDefault();
