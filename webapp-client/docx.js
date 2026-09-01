@@ -245,6 +245,205 @@ function flagBefore(p, note, xmlDoc) {
   p.parentNode.insertBefore(newP, p);
 }
 
+// --- futás-szintű szerkesztés: a "D1" mondat-újraíráshoz és a formázatlan
+// helykitöltőkhöz (a generate_policy.py azonos nevű primitívjeinek PONTOS
+// párjai - ld. ott a részletes magyarázatot) ---
+
+// A sablon jelölőinek szövegkezdete és a formázatlan helykitöltő - a
+// biztonsági söprés (sweepLeftoverMarkers) ezekre keres.
+const MARKER_PREFIX = '▶ Adatbékérő';
+const GAP_PLACEHOLDER = 'innen hiányzik';
+
+// A generate_policy.py set_plain_run_text() párja: futás szövegének
+// felülírása JELÖLÉS NÉLKÜL (nyelvtani ragasztóelemekhez).
+function setPlainRunText(p, runIdx, text, xmlDoc) {
+  setRunText(getRuns(p)[runIdx], text, xmlDoc);
+}
+
+// A generate_policy.py fill_run() párja: MEGLÉVŐ futás lecserélése a
+// válaszra, a szokásos kitöltendő-jelöléssel.
+function fillRun(p, runIdx, value, xmlDoc) {
+  const r = getRuns(p)[runIdx];
+  setRunText(r, textValue(value), xmlDoc);
+  markSubstituted(r, xmlDoc);
+}
+
+// A generate_policy.py substitute_in_run() párja: a futást HÁROM futásra
+// bontja (before / value / after), a középsőt megjelöli. Mindig pontosan
+// három futás keletkezik, hogy a két motor futás-indexei bitre egyezzenek.
+function substituteInRun(p, runIdx, before, value, after, xmlDoc) {
+  const original = getRuns(p)[runIdx];
+  const mid = original.cloneNode(true);
+  const tail = original.cloneNode(true);
+  original.parentNode.insertBefore(tail, original.nextSibling);
+  original.parentNode.insertBefore(mid, original.nextSibling);
+  const runs = getRuns(p);
+  setRunText(runs[runIdx], before, xmlDoc);
+  setRunText(runs[runIdx + 1], textValue(value), xmlDoc);
+  markSubstituted(runs[runIdx + 1], xmlDoc);
+  setRunText(runs[runIdx + 2], after, xmlDoc);
+  clearChoiceMarks(p, new Set([runIdx + 1]));
+  return runIdx + 1;
+}
+
+// A generate_policy.py fill_text_placeholder() párja: a sablonban FORMÁZÁS
+// NÉLKÜL hagyott helykitöltőt (pl. "innen hiányzik") szöveg szerint keresi
+// meg és cseréli le.
+function fillTextPlaceholder(p, placeholder, value, xmlDoc) {
+  const runs = getRuns(p);
+  for (let i = 0; i < runs.length; i++) {
+    const t = getRunText(runs[i]);
+    const pos = t.indexOf(placeholder);
+    if (pos >= 0) {
+      substituteInRun(p, i, t.slice(0, pos), value,
+        t.slice(pos + placeholder.length), xmlDoc);
+      return true;
+    }
+  }
+  return false;
+}
+
+// A generate_policy.py prepend_sentence() párja.
+function prependSentence(p, text, xmlDoc) {
+  const runs = getRuns(p);
+  if (!runs.length) return false;
+  substituteInRun(p, 0, '', text, getRunText(runs[0]), xmlDoc);
+  return true;
+}
+
+// A generate_policy.py truncate_at() párja: a bekezdés szövegéből a megadott
+// résztől kezdve mindent levág (az olvasónak szóló sablon-felszólításokat).
+// A Python str.rstrip() párja a /\s+$/ csere.
+function truncateAt(p, marker, xmlDoc) {
+  let found = false;
+  for (const r of getRuns(p)) {
+    if (found) { setRunText(r, '', xmlDoc); continue; }
+    const t = getRunText(r);
+    const pos = t.indexOf(marker);
+    if (pos >= 0) {
+      setRunText(r, t.slice(0, pos).replace(/\s+$/, ''), xmlDoc);
+      found = true;
+    }
+  }
+  return found;
+}
+
+// A generate_policy.py drop_leading_word() párja.
+function dropLeadingWord(p, runIdx, word, xmlDoc) {
+  const r = getRuns(p)[runIdx];
+  const t = getRunText(r);
+  const prefix = word + ' ';
+  if (t.startsWith(prefix)) {
+    setRunText(r, t.slice(prefix.length), xmlDoc);
+    return true;
+  }
+  return false;
+}
+
+// A generate_policy.py restate() párja: JELÖLETLEN sablonmondat teljes
+// újraírása a válaszból (ugyanaz a tény a sablon több pontján is szerepel).
+function restate(p, text, xmlDoc) {
+  const runs = getRuns(p);
+  if (!runs.length) return false;
+  setRunText(runs[0], textValue(text), xmlDoc);
+  markSubstituted(runs[0], xmlDoc);
+  for (let i = 1; i < runs.length; i++) setRunText(runs[i], '', xmlDoc);
+  clearChoiceMarks(p, new Set([0]));
+  return true;
+}
+
+// --- a sablon szerzőjének feltételes utasításai ("D2") ---
+//
+// A generate_policy.py _AUTHOR_INSTRUCTION_RE / strip_author_instruction() /
+// keep_if() PONTOS párjai. A szerzői utasítás ("ezt csak akkor írja ha ...")
+// SOSEM kerülhet ki az ügyfélhez, akkor sem, ha a hozzá tartozó mondat marad.
+const AUTHOR_INSTRUCTION_RE = /\bez(?:t)?\s+(?:csak\s+)?akkor\b/i;
+
+function stripAuthorInstruction(p, xmlDoc) {
+  let removed = false;
+  for (const r of getRuns(p)) {
+    if (AUTHOR_INSTRUCTION_RE.test(getRunText(r))) {
+      setRunText(r, '', xmlDoc);
+      removed = true;
+    }
+  }
+  return removed;
+}
+
+// FELTÉTELES BEKEZDÉS-MEGTARTÁS: a szerzői utasítást mindig kiveszi; ha a
+// feltétel igaz, a bekezdés marad, egyébként törlődik (opcionális
+// ⚠ ELLENŐRIZENDŐ jelöléssel).
+function keepIf(p, condition, note, xmlDoc) {
+  stripAuthorInstruction(p, xmlDoc);
+  if (condition) { keepP(p, xmlDoc); return true; }
+  if (note) flagBefore(p, note, xmlDoc);
+  deleteP(p);
+  return false;
+}
+
+// --- mondat-újraírás ("D1") és jelölő-kitöltés ---
+
+// A generate_policy.py rewrite_fact() párja.
+//
+// `fallback` megadva: üres válasznál a sablon eredeti mondatát ilyenkor is
+// TÖRÖLJÜK, és a semleges, cégfüggetlen `fallback` kerül be helyette - ezt
+// kell használni ott, ahol a sablon mondata egy MÁSIK cég azonosítható
+// adatát (nevét, regisztrációs számát, rendszernevét) tartalmazza.
+// `fallback` nélkül a sablon általános alapértelmezése marad, jelöléssel.
+function rewriteFact(factP, markerP, text, note, xmlDoc, fallback) {
+  const value = textValue(text).trim();
+  if (value) {
+    fillBlanks(markerP, [value], xmlDoc);
+    deleteP(factP);
+    return true;
+  }
+  if (fallback) {
+    fillBlanks(markerP, [fallback], xmlDoc);
+    deleteP(factP);
+    flagBefore(markerP, note, xmlDoc);
+    return false;
+  }
+  deleteP(markerP);
+  flagBefore(factP, note, xmlDoc);
+  keepP(factP, xmlDoc);
+  return false;
+}
+
+// A generate_policy.py fill_or_flag() párja.
+function fillOrFlag(markerP, text, note, xmlDoc) {
+  const value = textValue(text).trim();
+  if (value) { fillBlanks(markerP, [value], xmlDoc); return true; }
+  flagBefore(markerP, note, xmlDoc);
+  deleteP(markerP);
+  return false;
+}
+
+// A generate_policy.py flag_unwired() párja.
+function flagUnwired(markerP, note, xmlDoc) {
+  flagBefore(markerP, note, xmlDoc);
+  deleteP(markerP);
+}
+
+// A generate_policy.py sweep_leftover_markers() párja - BIZTONSÁGI HÁLÓ a
+// generálás végén, a VÉGLEGES bekezdéslistán.
+function sweepLeftoverMarkers(paragraphs, xmlDoc) {
+  let count = 0;
+  for (const para of paragraphs) {
+    const runs = getRuns(para);
+    const text = runs.map(getRunText).join('');
+    if (!text.includes(MARKER_PREFIX) && !text.includes(GAP_PLACEHOLDER)) continue;
+    for (const r of runs) {
+      setRunText(r, getRunText(r).split(MARKER_PREFIX).join('')
+        .split(GAP_PLACEHOLDER).join(''), xmlDoc);
+    }
+    flagBefore(para,
+      'a sablon egy kitöltetlen jelölője/helykitöltője maradt itt - a ' +
+      'motor kivette a szövegét, de a bekezdést kérjük kézzel átnézni.', xmlDoc);
+    count += 1;
+  }
+  return count;
+}
+
 // --- dátum segéd ---
 
 const MONTHS = {
@@ -253,6 +452,11 @@ const MONTHS = {
   'október': 10, 'november': 11, 'december': 12,
 };
 
+const MONTH_NAMES = [
+  'január', 'február', 'március', 'április', 'május', 'június',
+  'július', 'augusztus', 'szeptember', 'október', 'november', 'december',
+];
+
 function monthNum(value) {
   const s = String(value).trim().toLowerCase();
   if (Object.prototype.hasOwnProperty.call(MONTHS, s)) return MONTHS[s];
@@ -260,10 +464,19 @@ function monthNum(value) {
   return m ? parseInt(m[0], 10) : 12;
 }
 
+// A generate_policy.py month_name() párja: hónapszám -> magyar hónapnév,
+// érvénytelen értékre üres sztring (a hívó ilyenkor jelöl).
+function monthName(num) {
+  const n = strictInt(num);
+  if (n === null || n < 1 || n > 12) return '';
+  return MONTH_NAMES[n - 1];
+}
+
 // A Python int(str) pontos tükörképe: csak egész szám fogadható el (nem
 // "13.5", nem "abc"), opcionális előjellel és külső szóközökkel. Hibás
 // bemenetre null - a Python ilyenkor ValueError-t dob.
 function strictInt(value) {
+  if (typeof value === 'boolean') return null;
   if (typeof value === 'number') return Number.isInteger(value) ? value : null;
   const s = String(value).trim();
   if (!/^[+-]?\d+$/.test(s)) return null;
@@ -306,36 +519,104 @@ function classifyPenznem(raw) {
   return 'egyeb';
 }
 
-// A generate_policy.py classify_beszamolo_forma() PONTOS párja.
+// A generate_policy.py classify_beszamolo_forma() PONTOS párja - a kérdőív
+// (Munka3 munkalap) NÉGY ismert válaszára sorol be, az IFRS-es változatot is
+// beleértve; amit nem tud besorolni, azt változatlanul visszaadja.
 function classifyBeszamoloForma(raw) {
   const t = deaccent((raw || '').trim().toLowerCase()).replace(/_/g, ' ');
-  if (t.includes('ifrs')) return raw;
+  if (t.includes('ifrs')) return 'eves_beszamolo_ifrs';
   if (t.includes('mikro')) return 'mikrogazdalkodoi_egyszerusitett_eves_beszamolo';
   if (t.includes('egyszerus')) return 'egyszerusitett_eves_beszamolo';
   if (t.includes('eves')) return 'eves_beszamolo';
   return raw;
 }
 
+// A generate_policy.py illustrative_date() PONTOS tükörképe: a fordulónap +
+// offset (hónap, nap, ÉV-eltolódás) hármasa, hibás bemenetre [null,null,null].
+//
+// Fontos: a Python datetime.date szigorúan validál (hónap 1-12, a hónapban
+// létező nap), és hibás értékre kivételt dob; a JS Date ezzel szemben csendben
+// túlcsordul (2024. 13. hó -> 2025. január), ezért ugyanezeket a feltételeket
+// itt kézzel kell ellenőrizni - NE egyszerűsítsd vissza. Az egész-értelmezés
+// mindkét oldalon a strictInt()/strict_int() szigorúságát követi.
 function illustrativeDate(fordulonapHonap, fordulonapNap, offsetDays) {
-  // A generate_policy.py illustrative_date() PONTOS tükörképe. Fontos: a
-  // Python datetime.date szigorúan validál (hónap 1-12, a hónapban létező
-  // nap), és hibás értékre kivételt dob -> "…". A JS Date ezzel szemben
-  // csendben túlcsordul (2024. 13. hó -> 2025. január), ezért ugyanezeket a
-  // feltételeket itt kézzel kell ellenőrizni, különben a két motor hibásan
-  // kitöltött kérdőívre ELTÉRŐ dokumentumot adna.
   const m = monthNum(fordulonapHonap);
   const d = strictInt(fordulonapNap);
-  const off = strictInt(offsetDays === '' || offsetDays == null ? 0 : offsetDays);
-  if (d === null || off === null) return ['…', '…'];
-  if (m < 1 || m > 12 || d < 1 || d > 31) return ['…', '…'];
+  const off = strictInt(offsetDays);
+  if (d === null || off === null || m < 1 || m > 12 || d < 1 || d > 31) {
+    return [null, null, null];
+  }
   const base = new Date(2024, m - 1, d);
   if (base.getFullYear() !== 2024 || base.getMonth() !== m - 1 || base.getDate() !== d) {
-    return ['…', '…'];  // pl. február 30. - a Python is ValueError-t dobna
+    return [null, null, null];  // pl. február 30. - a Python is ValueError-t dobna
   }
   base.setDate(base.getDate() + off);
-  // A Python date-tartománya 1..9999 év; azon kívül OverflowError -> "…".
   if (!Number.isFinite(base.getTime()) || base.getFullYear() < 1 || base.getFullYear() > 9999) {
-    return ['…', '…'];
+    return [null, null, null];
   }
-  return [base.getMonth() + 1, base.getDate()];
+  return [base.getMonth() + 1, base.getDate(), base.getFullYear() - 2024];
+}
+
+// --- szöveg-segédek (a generate_policy.py azonos nevű függvényeinek párjai) ---
+
+// txt(): szabadszöveges válasz kiolvasása, körülvágva.
+function txt(a, key) {
+  return textValue(answer(a, key, '')).trim();
+}
+
+// A generate_policy.py hu_article() párja: magyar határozott névelő.
+function huArticle(word) {
+  const s = textValue(word).trim();
+  if (!s) return 'a';
+  const first = deaccent(s[0].toLowerCase());
+  return 'aeiou'.includes(first) ? 'az' : 'a';
+}
+
+// A generate_policy.py inline_value() párja: a sormintában álló jelölő értéke
+// hozza magával az elválasztó szóközöket (üres értéknél nem marad lógó szóköz).
+function inlineValue(text, prefix, suffix) {
+  const s = textValue(text).trim();
+  if (!s) return '';
+  return (prefix === undefined ? '' : prefix) + s + (suffix === undefined ? ' ' : suffix);
+}
+
+// A generate_policy.py join_clauses() párja.
+function joinClauses(parts, sep) {
+  const sp = sep === undefined ? ' ' : sep;
+  return parts.map(x => textValue(x).trim()).filter(x => x).join(sp);
+}
+
+// A generate_policy.py as_sentence() párja: mondatzáró írásjel pótlása.
+function asSentence(text) {
+  const s = textValue(text).trim();
+  if (!s) return '';
+  return '.!?:;'.includes(s[s.length - 1]) ? s : s + '.';
+}
+
+// A generate_policy.py join_sentences() párja.
+function joinSentences(parts) {
+  return parts.map(asSentence).filter(x => x).join(' ');
+}
+
+// A generate_policy.py igenlo() / nemleges() párjai: szabadon gépelt igen/nem.
+function igenlo(value) {
+  return deaccent(textValue(value).trim().toLowerCase()).startsWith('igen');
+}
+
+function nemleges(value) {
+  return deaccent(textValue(value).trim().toLowerCase()).startsWith('nem');
+}
+
+// A generate_policy.py penznem_neve() párja: a pénznem KIÍRHATÓ neve.
+function penznemNeve(a) {
+  const raw = textValue(answer(a, 'penznem_tipus', 'forint')).trim();
+  const tipus = classifyPenznem(raw);
+  if (tipus === 'forint') return 'forint';
+  if (tipus === 'euro') return 'euró';
+  if (tipus === 'usd') return 'USA dollár';
+  const nev = txt(a, 'penznem_egyeb_neve');
+  if (nev) return nev;
+  const rawNorm = deaccent(raw.toLowerCase()).replace(/_/g, ' ');
+  if (raw && !PENZNEM_EGYEB_PLACEHOLDERS.has(rawNorm)) return raw;
+  return '';
 }

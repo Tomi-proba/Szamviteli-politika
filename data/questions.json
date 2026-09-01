@@ -16,20 +16,47 @@
       "tipus": "text"
     },
     {
+      "kulcs": "alapitas_idopontja",
+      "forras": "ugyfel",
+      "eredeti": "Szv#112",
+      "kerdes": "Alapítás időpontja?",
+      "tipus": "text"
+    },
+    {
+      "kulcs": "gazdalkodasi_forma",
+      "forras": "ugyfel",
+      "eredeti": "Szv#113",
+      "kerdes": "Működési/gazdálkodási forma?",
+      "tipus": "combo",
+      "opciok": [
+        "Kft.",
+        "Zrt.",
+        "Nyrt.",
+        "Bt.",
+        "Kkt.",
+        "Egyéni cég"
+      ]
+    },
+    {
       "kulcs": "szv3",
       "forras": "ugyfel",
       "eredeti": "Szv#3",
       "kerdes": "telephelye",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
+    },
+    {
+      "kulcs": "fioktelepek",
+      "forras": "ugyfel",
+      "eredeti": "Szv#114",
+      "kerdes": "Fióktelepe(i)?",
+      "tipus": "text"
     },
     {
       "kulcs": "szv4",
       "forras": "ugyfel",
       "eredeti": "Szv#4",
       "kerdes": "tulajdonosai",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv5",
@@ -48,7 +75,7 @@
     {
       "kulcs": "cegjegyzekszam",
       "forras": "ugyfel",
-      "eredeti": "Szv#6",
+      "eredeti": "Szv#111",
       "kerdes": "cégjegyzékszáma",
       "tipus": "text"
     },
@@ -57,16 +84,14 @@
       "forras": "ugyfel",
       "eredeti": "Szv#7",
       "kerdes": "KSH jelzőszáma",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv8",
       "forras": "ugyfel",
       "eredeti": "Szv#8",
       "kerdes": "fő tevékenysége",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv9",
@@ -110,7 +135,8 @@
       "forras": "ugyfel",
       "eredeti": "Szv#12",
       "kerdes": "Ha euróra vagy USA dollárra tértek át: mikor hozták meg az áttérésről a döntést? (üresen hagyható, ha nem releváns)",
-      "tipus": "text"
+      "tipus": "text",
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "penznem_egyeb_neve",
@@ -167,8 +193,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#16",
       "kerdes": "Mi a beszámoló nyelve?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "beszamolo_mertekegysege",
@@ -191,7 +216,8 @@
       "cimkek": [
         "Nem",
         "Igen"
-      ]
+      ],
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "idegen_nyelv",
@@ -203,7 +229,8 @@
         "van_idegen_nyelvu_beszamolo": [
           "igen"
         ]
-      }
+      },
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "merlegkeszites_nap",
@@ -225,7 +252,8 @@
       "cimkek": [
         "Nem",
         "Igen"
-      ]
+      ],
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "merlegkeszites_kivetelek",
@@ -237,7 +265,8 @@
         "merlegkeszites_van_kivetel": [
           "igen"
         ]
-      }
+      },
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "fordulonap_honap",
@@ -277,12 +306,25 @@
       ]
     },
     {
+      "kulcs": "beszamolo_kozzetel_datum",
+      "forras": "ugyfel",
+      "eredeti": "Szv#19",
+      "kerdes": "Mi a beszámoló közzétételének határideje?",
+      "tipus": "text"
+    },
+    {
       "kulcs": "szv20",
       "forras": "ugyfel",
       "eredeti": "Szv#20",
       "kerdes": "Ki felelős a beszámoló elkészítésért?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
+    },
+    {
+      "kulcs": "munkafolyamat_iranyitas_felelos",
+      "forras": "ugyfel",
+      "eredeti": "Szv#20",
+      "kerdes": "Ki felelős a munkafolyamatok irányításáért, ellenőrzéséért?",
+      "tipus": "text"
     },
     {
       "kulcs": "beszamolo_alairoja",
@@ -312,8 +354,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#24",
       "kerdes": "Kinek a feladata gondoskodni a beszámoló közzétételéről és letétbe helyezéséről?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "konyvvizsgalat_tipus",
@@ -349,6 +390,34 @@
       }
     },
     {
+      "kulcs": "konyvvizsgalo_nyilvantartasi_szam",
+      "forras": "ugyfel",
+      "eredeti": "Szv#115",
+      "kerdes": "A könyvvizsgáló (könyvvizsgáló cég) nyilvántartási száma?",
+      "tipus": "text",
+      "csak_ha": {
+        "konyvvizsgalat_tipus": [
+          "kotelezo_altalanos",
+          "kotelezo_koztartozas_miatt",
+          "onkentes"
+        ]
+      }
+    },
+    {
+      "kulcs": "konyvvizsgalatert_felelos_konyvvizsgalo",
+      "forras": "ugyfel",
+      "eredeti": "Szv#116",
+      "kerdes": "A könyvvizsgálat végrehajtásáért (személyében) felelős könyvvizsgáló neve?",
+      "tipus": "text",
+      "csak_ha": {
+        "konyvvizsgalat_tipus": [
+          "kotelezo_altalanos",
+          "kotelezo_koztartozas_miatt",
+          "onkentes"
+        ]
+      }
+    },
+    {
       "kulcs": "szv26",
       "forras": "ugyfel",
       "eredeti": "Szv#26",
@@ -361,8 +430,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#27",
       "kerdes": "Könyvvizsgálat esetén mikor kell átadni a beszámoló adatait könyvvizsgálatra?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "fenntarthatosagi_jelentes",
@@ -386,8 +454,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#30",
       "kerdes": "Kinek a feladata gondoskodni a számviteli szabályzatok elkészítéséről, módosításáról?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "ertekeles_felelos_tipus",
@@ -498,8 +565,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#34",
       "kerdes": "A mérleg és eredménykimutatás tételeit  módosítja a Társaság? (tovább tagolás, új tétel felvitel, összevonás, tétel elhagyása)",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "konszolidacio_tipus",
@@ -545,8 +611,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#36",
       "kerdes": "Ki a leltárkészítés és leltározás felelőse?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "leltar_felelos_tipus",
@@ -563,7 +628,8 @@
         "Vezetés / számviteli rendért felelős személy",
         "Eszköz-/forrásfelelősök",
         "Egyedi delegálás"
-      ]
+      ],
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "leltar_delegalas_reszletek",
@@ -575,15 +641,15 @@
         "leltar_felelos_tipus": [
           "egyedi_delegalas"
         ]
-      }
+      },
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "szv37",
       "forras": "ugyfel",
       "eredeti": "Szv#37",
       "kerdes": "Ki a pénzkezelés felelőse?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "penzkezeles_felelos_tipus",
@@ -598,7 +664,8 @@
       "cimkek": [
         "Vezetés által kijelölt személy",
         "Pénzkezelési szabályzat szerint"
-      ]
+      ],
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "szv38",
@@ -612,7 +679,7 @@
       "kulcs": "jelentos_osszeg_bemutatas",
       "forras": "ugyfel",
       "eredeti": "Szv#39",
-      "kerdes": "Mit tekint a vállalkozás jelentős összegnek a bemutatási kötelezettség szempontjából? (Ft összeghatár.)",
+      "kerdes": "Mit tekint a vállalkozás jelentős összegnek a bemutatási kötelezettség szempontjából? (Millió forintban - a sablon \"… mFt-ot meghaladó összeg\" fordulatába kerül be.)",
       "tipus": "text"
     },
     {
@@ -620,7 +687,8 @@
       "forras": "ugyfel",
       "eredeti": "Szv#39",
       "kerdes": "Mit tekint a vállalkozás jelentős összegnek általánosan, a számviteli elszámolás és értékelés szempontjából? (E Ft összeghatár.)",
-      "tipus": "text"
+      "tipus": "text",
+      "_nincs_sablonhely": true
     },
     {
       "kulcs": "szv40",
@@ -692,17 +760,15 @@
       "kulcs": "koltsegelszamolas_tipus",
       "forras": "ugyfel",
       "eredeti": "Szv#45",
-      "kerdes": "A költségelszámolás választott módja a sablon szerint: csak az 5. számlaosztályban; elsődlegesen 5., másodlagosan 6-7.; vagy elsődlegesen 6-7., másodlagosan 5. számlaosztályban?",
+      "kerdes": "Mi az alkalmazott költségelszámolás módja?",
       "tipus": "select",
       "opciok": [
         "csak_5",
-        "5_elsodleges",
-        "67_elsodleges"
+        "5_es_67"
       ],
       "cimkek": [
-        "Csak az 5. számlaosztály",
-        "5. számlaosztály elsődlegesen, 6-7. másodlagosan",
-        "6-7. számlaosztály elsődlegesen, 5. másodlagosan"
+        "5-ös 8-as számlaosztályt használnak",
+        "6-7-es számlaosztályt is alkalmaznak"
       ]
     },
     {
@@ -710,24 +776,21 @@
       "forras": "ugyfel",
       "eredeti": "Szv#46",
       "kerdes": "A könyvelő programban használnak-e munkaszámokat vagy egyéb kódrendszert különböző elkülönítések könyvelésére? Amennyiben igen, kérnénk a bemutatását.",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv47",
       "forras": "ugyfel",
       "eredeti": "Szv#47",
       "kerdes": "Hogyan épül fel a programban a számlatükör struktúra?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv48",
       "forras": "ugyfel",
       "eredeti": "Szv#48",
       "kerdes": "Kinek a felelőssége a számlatükör és számlarend kialakítása, karbantartása?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "bizonylat_konyveles_osszhang",
@@ -787,24 +850,21 @@
       "forras": "ugyfel",
       "eredeti": "Szv#54",
       "kerdes": "A számviteli bizonylatok könyvekben történő rögzítésének határideje? Kérjük részletezni amennyiben eltérő szabályok vonatkoznak az egyes bizonylattípusokra!",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv55",
       "forras": "ugyfel",
       "eredeti": "Szv#55",
       "kerdes": "Történik-e havonta vagy negyedévente főkönyvi zárás?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv56",
       "forras": "ugyfel",
       "eredeti": "Szv#56",
       "kerdes": "Az évközi zárásoknak mi a határideje?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "evkozi_zarasok_feladatai",
@@ -818,8 +878,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#58",
       "kerdes": "Amennyiben nincs évközi zárás milyen gyakorisággal könyvelik a vegyes tételeket? Milyen gyakorisággal ellenőrzik a főkönyvet?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "alapitas_atszervezes_aktivalja",
@@ -853,8 +912,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#60",
       "kerdes": "Kísérleti fejlesztés költségeit  és a befejezetlen kísérleti fejlesztés költségeit aktiválják-e, illetve kimutatják-e a kísérleti fejlesztés aktívált értékeként? Mennyi idő alatt írják le? (Max. 5 év lehet)",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "van_cegertek",
@@ -920,8 +978,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#62",
       "kerdes": "Vagyoni értékű jogok mérlegsoron milyen jogokat tarnak nyilván?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "ertekhelyesbites_immat_van",
@@ -1009,88 +1066,77 @@
       "forras": "ugyfel",
       "eredeti": "Szv#64",
       "kerdes": "Mik az értékhelyesbítés alkalmazásának szabályai?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv65",
       "forras": "ugyfel",
       "eredeti": "Szv#65",
       "kerdes": "Mi az az értékhatár amelyet jelentősnek tekintenek ahhoz, hogy az értékhelyesbítést elszámolják?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv66",
       "forras": "ugyfel",
       "eredeti": "Szv#66",
       "kerdes": "Környezet védelmet közvetlenül szolgáló tárgyi eszközökkel rendelkezik a társaság?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv67",
       "forras": "ugyfel",
       "eredeti": "Szv#67",
       "kerdes": "Veszélyes hulladék keletkezik a társaságnál?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv68",
       "forras": "ugyfel",
       "eredeti": "Szv#68",
       "kerdes": "Rendelkezik a társaság környezetvédelmi kötelezettséggel?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv69",
       "forras": "ugyfel",
       "eredeti": "Szv#69",
       "kerdes": "Milyen leírási módszert használnak az immateriális javak és tárgyi eszközök értékcsökkenésének elszámolására?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv70",
       "forras": "ugyfel",
       "eredeti": "Szv#70",
       "kerdes": "A beszerzéskor egy összegben elszámolandó értékcsökkenés esetén mennyi a beszerzési érték határ? (200 eFt?)",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv71",
       "forras": "ugyfel",
       "eredeti": "Szv#71",
       "kerdes": "Milyen gyakorisággal számolják el az értékcsökkenést? (naponta, havonta, negyedévente, évente)",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv72",
       "forras": "ugyfel",
       "eredeti": "Szv#72",
       "kerdes": "A tervszerinti értékcsökkenés megállapításához szükséges adatokat (hasznos élettartam, maradványérték, üzembe helyezés időpontja) ki , milyen formában határozza meg, adja meg a könyvelés részére?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv73",
       "forras": "ugyfel",
       "eredeti": "Szv#73",
       "kerdes": "Tárgyi eszközök esetében hogyan határozzák meg a maradvány értéket? (Alkalmaznak-e valamilyen határértéket ennek meghatározásához, vagy minden esetben az üzembehelyezéskor egyedileg állapítják meg az adott eszköz maradvány értékét?)",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv74",
       "forras": "ugyfel",
       "eredeti": "Szv#74",
       "kerdes": "Milyen esetekben tekintik nullának a maradványértéket?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv75",
@@ -1111,48 +1157,42 @@
       "forras": "ugyfel",
       "eredeti": "Szv#77",
       "kerdes": "A mennyiségi és értékbeni változásokhoz kapcsolódó (pl.:káresemény, selejtezés) terven felüli értékcsökkenést havonta, negyedévente vagy csak év végén számolják el?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv78",
       "forras": "ugyfel",
       "eredeti": "Szv#78",
       "kerdes": "Befektetett eszközök esetében élnek-e a piaci értéken történő értékelés lehetőségével? Mely eszközöknél?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv79",
       "forras": "ugyfel",
       "eredeti": "Szv#79",
       "kerdes": "A gazdasági társaságban lévő befektetések esetén az értékvesztés elszámolásra milyen szabályokat alkalmaznak?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv80",
       "forras": "ugyfel",
       "eredeti": "Szv#80",
       "kerdes": "Hosszú lejáratú hitelviszonyt megtestesítő értékpapírok esetében milyen értékvesztés elszámolási szabályokat alkalmaznak?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv81",
       "forras": "ugyfel",
       "eredeti": "Szv#81",
       "kerdes": "Vásárolt anyag és áru készleteket hogyan tartják nyilván?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv82",
       "forras": "ugyfel",
       "eredeti": "Szv#82",
       "kerdes": "Sajáttermelésű készlettel rendelkeznek-e?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv83",
@@ -1189,16 +1229,14 @@
       "forras": "ugyfel",
       "eredeti": "Szv#85",
       "kerdes": "A mennyiségi és értékbeni változásokhoz kapcsolódó (pl.:káresemény, selejtezés) értékvesztést havonta, negyedévente vagy csak év végén számolják el?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv86",
       "forras": "ugyfel",
       "eredeti": "Szv#86",
       "kerdes": "A vevő követeléseket hogyan csoportosítják a könyvelésben?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv87",
@@ -1236,8 +1274,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#91",
       "kerdes": "A devizás tételek forint értékének meghatározásához melyik bank, milyen árfolyamát használják? Azaz melyik a könyveléshez használatos választott árfolyamuk?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv92",
@@ -1252,8 +1289,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#93",
       "kerdes": "Devizás pénzeszközök esetén átlag vagy FIFO árfolyamot használnak a csökkenések forint értékének meghatározásához?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv94",
@@ -1361,16 +1397,14 @@
       "forras": "ugyfel",
       "eredeti": "Szv#99",
       "kerdes": "Hogyan dokumentálják az időbeli elhatárolás tételeket?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv100",
       "forras": "ugyfel",
       "eredeti": "Szv#100",
       "kerdes": "Alkalmazzák-e valamely eszközcsoportnál a valós értéken történő értékelést?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "kiegeszito_melleklet_sajatossagok",
@@ -1392,24 +1426,21 @@
       "forras": "ugyfel",
       "eredeti": "Szv#103",
       "kerdes": "Teljesítési fokot milyen módszerrel határozzák meg?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv104",
       "forras": "ugyfel",
       "eredeti": "Szv#104",
       "kerdes": "Készültségi fokot milyen módszerrel határozzák meg?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv105",
       "forras": "ugyfel",
       "eredeti": "Szv#105",
       "kerdes": "Vannak-e fedezeti ügyleteik? Amennyiben igen, mi a fedezeti hatékonyság mérésnek módszere, időpontja. Kockázatikezelési és fedezeti politikájuk van-e?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv106",
@@ -1447,8 +1478,7 @@
       "forras": "ugyfel",
       "eredeti": "Szv#108",
       "kerdes": "Társaságiadó vagy KIVA alanyok?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "szv109",
@@ -1463,16 +1493,14 @@
       "forras": "ugyfel",
       "eredeti": "Szv#110",
       "kerdes": "Globe adó kötelezettsége van-e a vállalkozásnak?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "ert1",
       "forras": "ugyfel",
       "eredeti": "Ért#1",
       "kerdes": "Van-e olyan értékelési módszerük, melynek következtében a bekerülési értéket vagy az év végi mérlegérték megállapítását a számviteli törvény előírásaitól eltérően határozzák meg?",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "ert2",
@@ -1487,8 +1515,7 @@
       "forras": "ugyfel",
       "eredeti": "Ért#3",
       "kerdes": "Élnek-e azzal a számviteli törvény adta lehetőséggel, hogy \" Azon gazdasági események esetén, amelyeknél az ellenérték külföldi pénzértékben kerül meghatározásra, a külföldi pénzértékre szóló követelés, illetve kötelezettség forintértékének meghatározása során  alkalmazható az általános forgalmi adóról szóló törvénynek az adóalap forintban történő megállapítására vonatkozó előírásai szerinti árfolyam is? 60.§ (5a)",
-      "tipus": "text",
-      "_nincs_sablonhely": true
+      "tipus": "text"
     },
     {
       "kulcs": "ert4_alkalmazza_elhatarolas",

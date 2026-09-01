@@ -155,28 +155,16 @@ class Handler(BaseHTTPRequestHandler):
 
         tmp_out = BASE / "output" / "webform_generalt_vazlat.docx"
         tmp_out.parent.mkdir(parents=True, exist_ok=True)
+        # A resolve_* sorrendet NEM duplikáljuk itt: a gp.generate() az
+        # egyetlen hiteles belépési pont, így ez az oldal automatikusan
+        # követi a motor változásait (korábban ez a lista elavult, amikor a
+        # sablon és vele a resolve_* függvények lecserélődtek).
+        tmp_in = BASE / "output" / "webform_valaszok.json"
         try:
-            doc = gp.docx.Document(str(gp.TEMPLATE))
-            p = doc.paragraphs
-            gp.resolve_nyelv(p, answers)
-            gp.resolve_penznem(p, answers)
-            gp.resolve_merlegkeszites(p, answers)
-            gp.resolve_fordulonap(p, answers)
-            gp.resolve_alairo(p, answers)
-            gp.resolve_konyvvizsgalat(p, answers)
-            gp.resolve_ertekelesi_felelos(p, answers)
-            gp.resolve_konyveles_felelos(p, answers)
-            gp.resolve_nyilvanossagra_hozatal(p, answers)
-            gp.resolve_konszolidacio(p, answers)
-            gp.resolve_leltar(p, answers)
-            gp.resolve_simple_fills(p, answers)
-            gp.resolve_alapitas_atszervezes(p, answers)
-            gp.resolve_cegertek(p, answers)
-            gp.resolve_ertekhelyesbites(p, answers)
-            gp.resolve_celtartalek(p, answers)
-            gp.resolve_ert4(p, answers)
-            gp.remove_jelolt_instructions(p)
-            doc.save(str(tmp_out))
+            tmp_in.write_text(
+                json.dumps(answers, ensure_ascii=False), encoding="utf-8"
+            )
+            gp.generate(tmp_in, tmp_out)
         except Exception:
             self.send_response(500)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
