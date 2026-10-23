@@ -178,6 +178,10 @@
     align-items: center; justify-content: center; padding: 1.5rem; z-index: 10;
   }
   #gate.hidden { display: none; }
+  #remoteGate {
+    position: fixed; inset: 0; background: var(--paper); display: flex;
+    align-items: center; justify-content: center; padding: 1.5rem; z-index: 30;
+  }
   .gate-card {
     max-width: 360px; width: 100%; background: var(--paper-raised); border: 1px solid var(--line);
     border-radius: 10px; box-shadow: var(--shadow); padding: 2rem 1.8rem;
@@ -218,7 +222,12 @@
 </style>
 </head>
 <body>
-<div id="gate">
+<div id="remoteGate">
+  <div class="gate-card">
+    <p>Betöltés&hellip;</p>
+  </div>
+</div>
+<div id="gate" class="hidden">
   <div class="gate-card">
     <p class="eyebrow">Iroda &middot; belépés</p>
     <h1>Csak belső használatra</h1>
@@ -2700,9 +2709,11 @@ document.getElementById("policyForm").addEventListener("submit", async (ev) => {
   }
 });
 
-renderForm();
-applyVisibility();
-document.addEventListener("change", applyVisibility);
+function initPage() {
+  renderForm();
+  applyVisibility();
+  document.addEventListener("change", applyVisibility);
+}
 
 /* ====================== KÓD KÓDOLÁS/DEKÓDOLÁS ====================== */
 // A "kód" (e-mailes/kimásolós átadáshoz) base64-be csomagolt JSON - ez marad
@@ -2868,7 +2879,52 @@ document.getElementById("gateSubmit").addEventListener("click", tryUnlock);
 document.getElementById("gatePassword").addEventListener("keydown", (ev) => {
   if (ev.key === "Enter") tryUnlock();
 });
-document.getElementById("gatePassword").focus();
+
+/* ====================== TÁVOLI BE/KI KAPCSOLÓ ======================
+   Lehetővé teszi, hogy szükség esetén (pl. hibát találunk az eszközben)
+   távolról leállítsuk - egy GitHub-fájl tartalmának szerkesztésével, nincs
+   hozzá külön szerver. Ez - a jelszóhoz hasonlóan - csak visszatartás, nem
+   valódi biztonsági mechanizmus.
+
+   SZÁNDÉKOSAN "fail-closed": ha a kapcsoló nem elérhető (nincs internet, a
+   GitHub nem válaszol, időtúllépés), az eszköz NEM indul el - nem csak
+   akkor áll le, ha kifejezetten "KI"-re van állítva. */
+const REMOTE_SWITCH_URL = "https://raw.githubusercontent.com/tomi-proba/szamviteli-politika/main/kapcsolo.txt";
+const REMOTE_SWITCH_TIMEOUT_MS = 10000;
+
+async function checkRemoteSwitch() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REMOTE_SWITCH_TIMEOUT_MS);
+    const res = await fetch(`${REMOTE_SWITCH_URL}?t=${Date.now()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return false;
+    const text = (await res.text()).trim().toUpperCase();
+    return text === "BE";
+  } catch (e) {
+    return false; // hálózati hiba, időtúllépés, blokkolt kérés -> ne induljon el
+  }
+}
+
+(async () => {
+  const remoteGate = document.getElementById("remoteGate");
+  const ok = await checkRemoteSwitch();
+  if (!ok) {
+    remoteGate.innerHTML = `
+      <div class="gate-card">
+        <h1>Jelenleg nem elérhető</h1>
+        <p>Próbáld meg később, vagy ellenőrizd a kapcsoló állását/az internetkapcsolatot.</p>
+      </div>`;
+    return;
+  }
+  remoteGate.remove();
+  initPage();
+  document.getElementById("gate").classList.remove("hidden");
+  document.getElementById("gatePassword").focus();
+})();
 </script>
 
 </body>

@@ -54,6 +54,37 @@ python3 webapp-client/hash_password.py "ÚjJelszó"
 # majd futtasd újra a build.py-t
 ```
 
+### Távoli be/ki kapcsoló
+
+Mindkét oldal (`dist_ugyfel.html` és `dist_iroda.html`) minden megnyitáskor
+lekérdezi a repó gyökerében lévő **`kapcsolo.txt`** fájl tartalmát:
+
+```
+https://raw.githubusercontent.com/tomi-proba/szamviteli-politika/main/kapcsolo.txt
+```
+
+- Ha a fájl tartalma `BE`, az oldal rendesen elindul.
+- Ha `KI`, vagy a fájl **bármilyen okból nem érhető el** (nincs internet a
+  megnyitó eszközön, a GitHub nem válaszol, időtúllépés - 10 másodperc után
+  feladja) - az oldal **nem indul el**, egy "Jelenleg nem elérhető" üzenetet
+  mutat. Ez **szándékosan "fail-closed"**: hálózati hiba esetén is leáll,
+  nem csak kifejezett "KI" esetén.
+- **Kapcsolás**: a `kapcsolo.txt` fájlt a GitHub weboldalán (telefonról is)
+  a ceruza/szerkesztés ikonnal lehet módosítani, és rögtön commitolni -
+  https://github.com/tomi-proba/szamviteli-politika/blob/main/kapcsolo.txt
+- **Csak annak van rá írási joga, akinek push-jogosultsága van a repóra** -
+  a repó publikus (ez kell is, hogy az ügyfél böngészője bejelentkezés
+  nélkül olvashassa a fájlt), de *szerkeszteni* csak az tudja, akinek
+  collaborator/push-joga van hozzá.
+- A GitHub kb. **5 percig gyorsítótárazza** a nyers fájlokat - a kapcsoló
+  átállítása nem azonnal, hanem néhány percen belül lép életbe.
+- Ez - a jelszóhoz hasonlóan - **csak visszatartás, nem valódi
+  biztonsági mechanizmus**: egy technikailag értő felhasználó a böngésző
+  fejlesztői eszközeivel megkerülhetné.
+- A mechanizmus csak azokban a fájlokban működik, amikbe bele van építve -
+  egy korábban elmentett, régebbi másolat sosem fogja lekérdezni a
+  kapcsolót.
+
 **Helyi Python-os webform** (ha valaki tud terminált használni, és nem kell
 a kétoldali ügyfél/iroda szétválasztás):
 
@@ -76,6 +107,7 @@ hard-code-olva vannak.
 ## Hogyan működik belül
 
 ```
+kapcsolo.txt                 <- távoli be/ki kapcsoló ("BE"/"KI") - ld. "Távoli be/ki kapcsoló" lentebb
 data/questions.json          <- a kérdőív definíciója (mit kérdezünk az ügyféltől / mit tud a könyvelő)
 data/answers.example.json    <- egy kitöltött minta-válaszkészlet (teszteléshez)
 data/answers.example2.json   <- második minta, az ELLENTÉTES ágakat gyakorolja
