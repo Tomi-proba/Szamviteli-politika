@@ -85,6 +85,47 @@ https://raw.githubusercontent.com/tomi-proba/szamviteli-politika/main/kapcsolo.t
   egy korábban elmentett, régebbi másolat sosem fogja lekérdezni a
   kapcsolót.
 
+### Integritás-ellenőrzés és kódelhomályosítás
+
+A `dist_ugyfel.html` és `dist_iroda.html` fájlokban a tényleges működő
+JS-kód (adatok, form-renderelés, a motor, a jelszó-ellenőrzés stb.) egy
+`<script type="application/octet-stream" id="core">` blokkban van - ezt a
+böngésző NEM futtatja le automatikusan (ez nem ismert JS MIME-típus). Egy
+kis, önállóan futó "bootstrap" script:
+
+1. lekérdezi a távoli be/ki kapcsolót (ld. fent),
+2. kiszámolja a `#core` blokk SHA-256 lenyomatát, és összeveti az
+   építéskor (`build.py`) kiszámolt, elvárt értékkel,
+3. csak ha **mindkettő** rendben van, a `#core` tartalmát valódi
+   `<script>`-ként beszúrja és lefuttatja.
+
+Ha valaki akár egyetlen karaktert töröl/módosít a `#core` blokkból (pl. ki
+akarja iktatni a jelszó-ellenőrzést vagy a kapcsolót), a lenyomat nem fog
+egyezni, és az oldal **nem indul el** - ugyanazt az általános "Jelenleg nem
+elérhető" üzenetet mutatja, mint a kapcsoló KI állásánál, hogy a hibaüzenet
+se adjon ötletet a mechanizmus kiiktatásához.
+
+A `#core` kódja a `build.py` futtatásakor a [javascript-obfuscator][obf]
+csomaggal el is van homályosítva (azonosítók átnevezve, szöveges literálok
+base64-kódolt tömbbe rejtve) - ez megnehezíti/időigényesebbé teszi az
+olvasást, de **nem akadályozza meg** a kiiktatást, csak lassítja.
+
+**Ez - a jelszóhoz és a távoli kapcsolóhoz hasonlóan - csak visszatartás,
+nem valódi védelem.** Egy technikailag értő felhasználó a böngésző
+fejlesztői eszközeivel ezt az ellenőrzést (és az elhomályosítást) is
+megértheti és kiiktathatja - csak magasabbra teszi a mércét az esetleges
+laikus/felületes próbálkozásokkal szemben, nem egy felkészült támadóval.
+
+[obf]: https://www.npmjs.com/package/javascript-obfuscator
+
+Build-időben szükséges Node.js + az `webapp-client/package.json`-ban
+felsorolt fejlesztői függőség (egyszeri telepítés):
+
+```bash
+cd webapp-client && npm install
+python3 webapp-client/build.py
+```
+
 **Helyi Python-os webform** (ha valaki tud terminált használni, és nem kell
 a kétoldali ügyfél/iroda szétválasztás):
 
@@ -125,7 +166,10 @@ webapp-client/resolve.js     <- a generate_policy.py resolve_* függvényeinek J
 webapp-client/ugyfel_source.html <- az ügyfél-oldal sablonja (build.py egészíti ki adattal)
 webapp-client/iroda_source.html  <- az iroda-oldal sablonja (jelszó-kapu + kódimport)
 webapp-client/hash_password.py   <- jelszó-hash generátor az iroda-oldalhoz
+webapp-client/obfuscate.mjs  <- build-időben hívott kódelhomályosító (javascript-obfuscator)
+webapp-client/package.json   <- az obfuscate.mjs Node-függősége (telepítés: cd webapp-client && npm install)
 webapp-client/build.py       <- összeállítja a publikálható dist_ugyfel.html / dist_iroda.html fájlokat
+                                 (ez futtatja az elhomályosítást és írja be a #core SHA-256 lenyomatát is)
 output/                      <- ide kerülnek a Python scripttel legenerált vázlatok
 ```
 

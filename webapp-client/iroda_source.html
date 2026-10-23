@@ -281,7 +281,7 @@
   </form>
 </div>
 
-<script>
+<script type="application/octet-stream" id="core">
 /* ====================== ADATOK: kérdésbank + sablon ====================== */
 // A TELJES adatbekérő (Számviteli politika + Értékelési szabályzat), pontosan
 // a forrás xlsx sorrendjében - ez tartalmazza azokat a kérdéseket is, amikhez
@@ -394,8 +394,7 @@ function applyVisibility() {
     el.classList.toggle("hidden", !show);
   });
 }
-</script>
-<script>
+
 /* ====================== MOTOR (zip + docx + resolve) ====================== */
 __ENGINE_JS__
 
@@ -657,6 +656,9 @@ document.getElementById("gatePassword").addEventListener("keydown", (ev) => {
   if (ev.key === "Enter") tryUnlock();
 });
 
+window.initPage = initPage;
+</script>
+<script>
 /* ====================== TÁVOLI BE/KI KAPCSOLÓ ======================
    Lehetővé teszi, hogy szükség esetén (pl. hibát találunk az eszközben)
    távolról leállítsuk - egy GitHub-fájl tartalmának szerkesztésével, nincs
@@ -686,10 +688,37 @@ async function checkRemoteSwitch() {
   }
 }
 
+/* ====================== INTEGRITÁS-ELLENŐRZÉS ======================
+   A fenti motor-kód egy "application/octet-stream" típusú (tehát a böngésző
+   által automatikusan NEM futtatott) <script> blokkban van - csak akkor
+   kerül tényleges <script>-ként beillesztésre és lefuttatásra, ha a
+   SHA-256 lenyomata megegyezik az építéskor kiszámolt várt értékkel. Ha
+   akár egyetlen karaktert is törölnek/módosítanak belőle, a lenyomat nem
+   egyezik, és az eszköz nem indul el. Ez is - a jelszóhoz és a távoli
+   kapcsolóhoz hasonlóan - csak visszatartás: aki érti és akarja, a
+   böngésző fejlesztői eszközeivel ezt az ellenőrzést is kiiktathatja. */
+const EXPECTED_CORE_HASH = "__CORE_HASH__";
+
+async function sha256HexOfText(text) {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function checkIntegrity() {
+  try {
+    const coreText = document.getElementById("core").textContent.replace(/\r\n/g, "\n");
+    const hash = await sha256HexOfText(coreText);
+    return hash === EXPECTED_CORE_HASH;
+  } catch (e) {
+    return false;
+  }
+}
+
 (async () => {
   const remoteGate = document.getElementById("remoteGate");
-  const ok = await checkRemoteSwitch();
-  if (!ok) {
+  const [switchOk, integrityOk] = await Promise.all([checkRemoteSwitch(), checkIntegrity()]);
+  if (!switchOk || !integrityOk) {
     remoteGate.innerHTML = `
       <div class="gate-card">
         <h1>Jelenleg nem elérhető</h1>
@@ -697,8 +726,11 @@ async function checkRemoteSwitch() {
       </div>`;
     return;
   }
+  const coreScript = document.createElement("script");
+  coreScript.textContent = document.getElementById("core").textContent;
+  document.body.appendChild(coreScript);
   remoteGate.remove();
-  initPage();
+  window.initPage();
   document.getElementById("gate").classList.remove("hidden");
   document.getElementById("gatePassword").focus();
 })();

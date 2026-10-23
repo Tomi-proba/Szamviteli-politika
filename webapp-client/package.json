@@ -1,0 +1,8 @@
+{
+  "name": "szamviteli-politika-webapp-build-tools",
+  "private": true,
+  "description": "Build-time only eszközök (kódelhomályosítás) a dist_*.html összeállításához. Nem kerül a böngészőbe.",
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1"
+  }
+}
